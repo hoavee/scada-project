@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import RotatingFan from "../components/RotatingFan";
 
 // Thành phần hiển thị các con số bên phải (Dashboard stats)
 const StatRow = ({ label, value, unit, onEdit }) => {
@@ -32,7 +33,6 @@ const StatRow = ({ label, value, unit, onEdit }) => {
 export default function ScadaPage() {
   const [isMounted, setIsMounted] = useState(false);
 
-  // 1. Quản lý toàn bộ thông số bằng State
   const [statsData, setStatsData] = useState({
     waterCooling: [
       { label: "Water Temp", value: "22.9", unit: "" },
@@ -73,10 +73,8 @@ export default function ScadaPage() {
     setEditModal({ ...editModal, isVisible: false });
   };
 
-  // 2. Hàm cập nhật giá trị mới vào State
   const handleUpdate = () => {
     const newValue = document.getElementById("modal-input").value;
-
     const updateArray = (arr) =>
       arr.map((item) =>
         item.label === editModal.label ? { ...item, value: newValue } : item
@@ -86,7 +84,6 @@ export default function ScadaPage() {
       waterCooling: updateArray(statsData.waterCooling),
       iduCooling: updateArray(statsData.iduCooling),
     });
-
     handleCloseEdit();
   };
 
@@ -94,7 +91,8 @@ export default function ScadaPage() {
 
   return (
     <div className="min-h-screen bg-[#e0e0e0] p-4 text-black font-sans select-none">
-      <div className="max-w-[1400px] mx-auto bg-white border border-gray-400 shadow-2xl p-6 min-h-[800px] relative">
+      <div className="w-full bg-white border border-gray-400 shadow-2xl p-4 min-h-[calc(100vh-120px)] relative">
+        {/* Modal */}
         {editModal.isVisible && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
             <div className="bg-white border-2 border-gray-800 p-4 shadow-2xl w-64">
@@ -126,7 +124,8 @@ export default function ScadaPage() {
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-8 border-b-2 border-gray-100 pb-2">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6 border-b-2 border-gray-100 pb-2">
           <h1 className="text-xl font-black text-gray-700 tracking-tighter uppercase italic">
             SCADA Monitoring Console
           </h1>
@@ -138,17 +137,33 @@ export default function ScadaPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6 relative">
-          <div className="col-span-9 relative h-[650px] border border-gray-200 bg-[#f8f9fa] rounded-sm overflow-hidden shadow-inner flex items-center justify-center">
-            <img
-              src="/system-demo.webp"
-              alt="System Illustration"
-              className="w-full h-full object-contain"
-            />
+        <div className="grid grid-cols-12 gap-6">
+          {/* CỘT BÊN TRÁI */}
+          <div className="col-span-9 border border-gray-300 bg-[#fdfdfd] relative overflow-hidden">
+            {/* Container này sẽ giữ tỉ lệ cố định 770/530 */}
+            <div
+              className="relative w-full mx-auto"
+              style={{ aspectRatio: "770 / 530" }}
+            >
+              {/* SVG NỀN - Để w-full h-full để nó lấp đầy container đã giữ tỉ lệ */}
+              <img
+                src="/system.svg"
+                alt="System Illustration"
+                className="absolute inset-0 w-full h-full object-fill"
+              />
+
+              {/* LỚP OVERLAY QUẠT */}
+              <RotatingFan x={134} y={428} size={35} isRunning={true} />
+              <RotatingFan x={251.5} y={428} size={35} isRunning={true} />
+              <RotatingFan x={393.5} y={428} size={35} isRunning={true} />
+              <RotatingFan x={535} y={428} size={35} isRunning={true} />
+              <RotatingFan x={653.5} y={428} size={35} isRunning={true} />
+            </div>
           </div>
 
+          {/* CỘT BÊN PHẢI */}
           <div className="col-span-3 flex flex-col gap-6">
-            <div className="bg-gray-50 border-t-4 border-blue-600 p-4 shadow-lg border border-gray-200">
+            <div className="bg-gray-50 border-t-4 border-blue-600 p-4 shadow-md border border-gray-200">
               <h2 className="text-blue-700 font-black text-xs mb-4 border-b border-blue-100 pb-1 uppercase italic tracking-widest">
                 Water Cooling System
               </h2>
@@ -165,7 +180,7 @@ export default function ScadaPage() {
               </div>
             </div>
 
-            <div className="bg-gray-50 border-t-4 border-orange-500 p-4 shadow-lg border border-gray-200">
+            <div className="bg-gray-50 border-t-4 border-orange-500 p-4 shadow-md border border-gray-200">
               <h2 className="text-orange-700 font-black text-xs mb-4 border-b border-orange-100 pb-1 uppercase italic tracking-widest">
                 IDU Cooling Stats
               </h2>
@@ -181,10 +196,10 @@ export default function ScadaPage() {
                 ))}
               </div>
               <div className="mt-4 flex gap-2">
-                <button className="flex-1 bg-red-600 text-white text-[10px] font-bold py-1.5 rounded active:scale-95 transition-transform shadow-md">
+                <button className="flex-1 bg-red-600 text-white text-[10px] font-bold py-1.5 rounded active:scale-95 shadow-md">
                   EMERGENCY STOP
                 </button>
-                <button className="flex-1 bg-gray-800 text-white text-[10px] font-bold py-1.5 rounded active:scale-95 transition-transform shadow-md">
+                <button className="flex-1 bg-gray-800 text-white text-[10px] font-bold py-1.5 rounded active:scale-95 shadow-md">
                   RESET
                 </button>
               </div>
