@@ -284,7 +284,7 @@ export default function ScadaPage() {
                   </h2>
                 </div>
 
-                {/*Pump-1 */}
+                {/*Pump-3 */}
                 <div
                   className="absolute pointer-events-none"
                   style={{
@@ -302,6 +302,20 @@ export default function ScadaPage() {
                     </span>
                   </h2>
                 </div>
+              </div>
+
+              {/*Gas Compressor */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: "18%",
+                  top: "36%",
+                  width: "20%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 10,
+                }}
+              >
+                <h2 className="font-bold text-[0.9vw]">GAS COMPRESSOR</h2>
               </div>
               {/* LỚP OVERLAY QUẠT */}
               <RotatingFan x={134} y={428} size={35} isRunning={false} />
