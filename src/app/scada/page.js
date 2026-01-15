@@ -152,6 +152,96 @@ export default function ScadaPage() {
                 className="absolute inset-0 w-full h-full object-fill"
               />
 
+              {/* Valve IDU-5 */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: "20.5%",
+                  top: "68%",
+                  width: "10%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 10,
+                }}
+              >
+                <h2 className="font-bold text-[0.9vw]">Valve</h2>
+                {/* Nhãn CLOSE*/}
+                <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-red-600 text-white rounded-[3px]">
+                  CLOSE
+                </span>
+              </div>
+
+              {/* Valve IDU-4 */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: "36%",
+                  top: "68%",
+                  width: "10%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 10,
+                }}
+              >
+                <h2 className="font-bold text-[0.9vw]">Valve</h2>
+                {/* Nhãn OPEN */}
+                <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-blue-500 text-white rounded-[3px]">
+                  OPEN
+                </span>
+              </div>
+
+              {/* Valve IDU-3 */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: "54.5%",
+                  top: "68%",
+                  width: "10%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 10,
+                }}
+              >
+                <h2 className="font-bold text-[0.9vw]">Valve</h2>
+                {/* Nhãn CLOSE*/}
+                <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-red-600 text-white rounded-[3px]">
+                  CLOSE
+                </span>
+              </div>
+
+              {/* Valve IDU-2 */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: "73%",
+                  top: "68%",
+                  width: "10%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 10,
+                }}
+              >
+                <h2 className="font-bold text-[0.9vw]">Valve</h2>
+                {/* Nhãn OPEN */}
+                <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-blue-500 text-white rounded-[3px]">
+                  OPEN
+                </span>
+              </div>
+
+              {/* Valve IDU-1 */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: "88.5%",
+                  top: "68%",
+                  width: "10%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 10,
+                }}
+              >
+                <h2 className="font-bold text-[0.9vw]">Valve</h2>
+                {/* Nhãn CLOSE*/}
+                <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-red-600 text-white rounded-[3px]">
+                  CLOSE
+                </span>
+              </div>
+
               {/* LỚP OVERLAY QUẠT */}
               <RotatingFan x={134} y={428} size={35} isRunning={false} />
               <RotatingFan x={251.5} y={428} size={35} isRunning={true} />
