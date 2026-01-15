@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import RotatingFan from "../components/RotatingFan";
+import SystemLabel from "../components/SystemLabel";
 
 // Thành phần hiển thị các con số bên phải (Dashboard stats)
 const StatRow = ({ label, value, unit, onEdit }) => {
@@ -53,6 +54,41 @@ export default function ScadaPage() {
       { label: "HT Temp. inc", value: "Max 8.00", unit: "" },
       { label: "Time changer", value: "0.00", unit: "" },
     ],
+  });
+
+  const DEVICES_CONFIG = [
+    // Nhóm Valve - dùng mặc định 10%
+    { id: "idu5", label: "Valve", left: "20%", top: "69%" },
+    { id: "idu4", label: "Valve", left: "35%", top: "69%" },
+    { id: "idu3", label: "Valve", left: "53.5%", top: "69%" },
+    { id: "idu2", label: "Valve", left: "72%", top: "69%" },
+    { id: "idu1", label: "Valve", left: "88.5%", top: "69%" },
+
+    // Nhóm Pump - dùng mặc định 10%
+    { id: "pump1", label: "PUMP 1", left: "39%", top: "46.5%" },
+    { id: "pump2", label: "PUMP 2", left: "56%", top: "46.5%" },
+    { id: "pump3", label: "PUMP 3", left: "72%", top: "46.5%" },
+
+    // Nhóm đặc biệt - cần width 20%
+    {
+      id: "compressor",
+      label: "GAS COMPRESSOR",
+      left: "15%",
+      top: "36%",
+      width: "20%",
+    },
+  ];
+  // Khai báo deviceStatus để tránh lỗi "not defined"
+  const [deviceStatus, setDeviceStatus] = useState({
+    idu5: { status: "CLOSE", color: "bg-red-600" },
+    idu4: { status: "OPEN", color: "bg-blue-500" },
+    idu3: { status: "CLOSE", color: "bg-red-600" },
+    idu2: { status: "OPEN", color: "bg-blue-500" },
+    idu1: { status: "CLOSE", color: "bg-red-600" },
+    pump1: { status: "STOP", color: "bg-red-600" },
+    pump2: { status: "RUN", color: "bg-blue-500" },
+    pump3: { status: "STOP", color: "bg-red-600" },
+    compressor: { status: null, color: "" }, // Không hiển thị nhãn
   });
 
   const [editModal, setEditModal] = useState({
@@ -151,172 +187,17 @@ export default function ScadaPage() {
                 alt="System Illustration"
                 className="absolute inset-0 w-full h-full object-fill"
               />
-              {/* Valve IDU */}
-              <div>
-                {/* Valve IDU-5 */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: "20.5%",
-                    top: "68%",
-                    width: "10%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 10,
-                  }}
-                >
-                  <h2 className="font-bold text-[0.9vw]">Valve</h2>
-                  {/* Nhãn CLOSE*/}
-                  <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-red-600 text-white rounded-[3px]">
-                    CLOSE
-                  </span>
-                </div>
-
-                {/* Valve IDU-4 */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: "36%",
-                    top: "68%",
-                    width: "10%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 10,
-                  }}
-                >
-                  <h2 className="font-bold text-[0.9vw]">Valve</h2>
-                  {/* Nhãn OPEN */}
-                  <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-blue-500 text-white rounded-[3px]">
-                    OPEN
-                  </span>
-                </div>
-
-                {/* Valve IDU-3 */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: "54.5%",
-                    top: "68%",
-                    width: "10%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 10,
-                  }}
-                >
-                  <h2 className="font-bold text-[0.9vw]">Valve</h2>
-                  {/* Nhãn CLOSE*/}
-                  <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-red-600 text-white rounded-[3px]">
-                    CLOSE
-                  </span>
-                </div>
-
-                {/* Valve IDU-2 */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: "73%",
-                    top: "68%",
-                    width: "10%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 10,
-                  }}
-                >
-                  <h2 className="font-bold text-[0.9vw]">Valve</h2>
-                  {/* Nhãn OPEN */}
-                  <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-blue-500 text-white rounded-[3px]">
-                    OPEN
-                  </span>
-                </div>
-
-                {/* Valve IDU-1 */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: "88.5%",
-                    top: "68%",
-                    width: "10%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 10,
-                  }}
-                >
-                  <h2 className="font-bold text-[0.9vw]">Valve</h2>
-                  {/* Nhãn CLOSE*/}
-                  <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-red-600 text-white rounded-[3px]">
-                    CLOSE
-                  </span>
-                </div>
-              </div>
-
-              {/*Pump */}
-              <div>
-                {/*Pump-1 */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: "39%",
-                    top: "46.5%",
-                    width: "10%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 10,
-                  }}
-                >
-                  <h2 className="font-bold text-[0.9vw]">
-                    PUMP 1{/* Nhãn STOP*/}
-                    <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-red-600 text-white rounded-[3px] ml-[2px]">
-                      STOP
-                    </span>
-                  </h2>
-                </div>
-
-                {/*Pump-2 */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: "56%",
-                    top: "46.5%",
-                    width: "10%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 10,
-                  }}
-                >
-                  <h2 className="font-bold text-[0.9vw]">
-                    PUMP 2{/* Nhãn RUN*/}
-                    <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-blue-500 text-white rounded-[3px] ml-[2px]">
-                      RUN
-                    </span>
-                  </h2>
-                </div>
-
-                {/*Pump-3 */}
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: "72%",
-                    top: "46.5%",
-                    width: "10%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 10,
-                  }}
-                >
-                  <h2 className="font-bold text-[0.9vw]">
-                    PUMP 3{/* Nhãn STOP*/}
-                    <span className="text-[0.7vw] font-medium px-[0.3vw] py-[0.2vw] bg-red-600 text-white rounded-[3px] ml-[2px]">
-                      STOP
-                    </span>
-                  </h2>
-                </div>
-              </div>
-
-              {/*Gas Compressor */}
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  left: "18%",
-                  top: "36%",
-                  width: "20%",
-                  transform: "translate(-50%, -50%)",
-                  zIndex: 10,
-                }}
-              >
-                <h2 className="font-bold text-[0.9vw]">GAS COMPRESSOR</h2>
-              </div>
+              {/* Label */}
+              {DEVICES_CONFIG.map((dev) => (
+                <SystemLabel
+                  key={dev.id}
+                  label={dev.label}
+                  position={{ left: dev.left, top: dev.top }}
+                  width={dev.width} // Truyền width từ config vào (nếu dev.width undefined thì sẽ dùng mặc định 10%)
+                  status={deviceStatus[dev.id]?.status}
+                  statusColor={deviceStatus[dev.id]?.color}
+                />
+              ))}
               {/* LỚP OVERLAY QUẠT */}
               <RotatingFan x={134} y={428} size={35} isRunning={false} />
               <RotatingFan x={251.5} y={428} size={35} isRunning={true} />
