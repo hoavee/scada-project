@@ -153,7 +153,7 @@ export default function ScadaPage() {
               />
 
               {/* LỚP OVERLAY QUẠT */}
-              <RotatingFan x={134} y={428} size={35} isRunning={true} />
+              <RotatingFan x={134} y={428} size={35} isRunning={false} />
               <RotatingFan x={251.5} y={428} size={35} isRunning={true} />
               <RotatingFan x={393.5} y={428} size={35} isRunning={true} />
               <RotatingFan x={535} y={428} size={35} isRunning={true} />
