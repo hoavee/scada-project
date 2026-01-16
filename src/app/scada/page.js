@@ -5,7 +5,6 @@ import RotatingFan from "../components/RotatingFan";
 import SystemLabel from "../components/SystemLabel";
 import EnvironmentalStats from "../components/EnvironmentalStats";
 
-// Thành phần hiển thị các con số bên phải (Dashboard stats)
 const StatRow = ({ label, value, unit, onEdit }) => {
   const isSetting = label.toLowerCase().includes("set");
 
@@ -32,84 +31,165 @@ const StatRow = ({ label, value, unit, onEdit }) => {
 export default function ScadaPage() {
   const [isMounted, setIsMounted] = useState(false);
 
+  // State để lưu timestamp từ API
+  const [apiTimestamp, setApiTimestamp] = useState("Loading...");
+
   const [statsData, setStatsData] = useState({
     waterCooling: [
-      { label: "Water Temp", value: "22.9", unit: "" },
-      { label: "Temp. set pump", value: "23.00", unit: "C" },
-      { label: "HYS Temp pump", value: "1.00", unit: "" },
-      { label: "Time HYS pump", value: "3.20", unit: "Min" },
-      { label: "Temp. set fan", value: "30.00", unit: "" },
-      { label: "HYS Temp fan", value: "1.00", unit: "" },
-      { label: "Changer Time", value: "51.20", unit: "" },
-      { label: "Delay FS Alarm", value: "9.60", unit: "" },
+      { label: "Water Temp", value: "0.0", unit: "" },
+      { label: "Temp. set pump", value: "0.00", unit: "C" },
+      { label: "HYS Temp pump", value: "0.00", unit: "" },
+      { label: "Time HYS pump", value: "0.00", unit: "Min" },
+      { label: "Temp. set fan", value: "0.00", unit: "" },
+      { label: "HYS Temp fan", value: "0.00", unit: "" },
+      { label: "Changer Time", value: "0.00", unit: "" },
+      { label: "Delay FS Alarm", value: "0.00", unit: "" },
     ],
     iduCooling: [
-      { label: "HYS Temp Set", value: "3.20", unit: "" },
-      { label: "Time HYS Temp", value: "680.00", unit: "Min" },
-      { label: "HYS HUM Set", value: "1.60", unit: "" },
-      { label: "Time HYS Hum", value: "130.00", unit: "Min" },
-      { label: "Heater Temp", value: "Start 5.00", unit: "" },
-      { label: "HT Temp. inc", value: "Max 8.00", unit: "" },
+      { label: "HYS Temp Set", value: "0.00", unit: "" },
+      { label: "Time HYS Temp", value: "0.00", unit: "Min" },
+      { label: "HYS HUM Set", value: "0.00", unit: "" },
+      { label: "Time HYS Hum", value: "0.00", unit: "Min" },
+      { label: "Heater Temp", value: "Start 0.00", unit: "" },
+      { label: "HT Temp. inc", value: "Max 0.00", unit: "" },
       { label: "Time changer", value: "0.00", unit: "" },
     ],
+    // Lưu thêm dữ liệu t1-t5, h1-h5 để dùng cho EnvironmentalStats
+    rawSensors: {
+      t1: "0",
+      h1: "0",
+      t2: "0",
+      h2: "0",
+      t3: "0",
+      h3: "0",
+      t4: "0",
+      h4: "0",
+      t5: "0",
+      h5: "0",
+    },
   });
 
-  const DEVICES_CONFIG = [
-    // Nhóm Valve - dùng mặc định 10%
-    { id: "idu5", label: "Valve", left: "20%", top: "69%" },
-    { id: "idu4", label: "Valve", left: "35%", top: "69%" },
-    { id: "idu3", label: "Valve", left: "53.5%", top: "69%" },
-    { id: "idu2", label: "Valve", left: "72%", top: "69%" },
-    { id: "idu1", label: "Valve", left: "88.5%", top: "69%" },
-
-    // Nhóm Pump - dùng mặc định 10%
-    { id: "pump1", label: "PUMP 1", left: "39%", top: "46.5%" },
-    { id: "pump2", label: "PUMP 2", left: "56%", top: "46.5%" },
-    { id: "pump3", label: "PUMP 3", left: "72%", top: "46.5%" },
-
-    // Nhóm đặc biệt - cần width 20%
-    {
-      id: "compressor",
-      label: "GAS COMPRESSOR",
-      left: "15%",
-      top: "36%",
-      width: "20%",
-    },
-  ];
-  // Khai báo deviceStatus để tránh lỗi "not defined"
   const [deviceStatus, setDeviceStatus] = useState({
     idu5: { status: "CLOSE", color: "bg-red-600" },
-    idu4: { status: "OPEN", color: "bg-blue-500" },
+    idu4: { status: "CLOSE", color: "bg-red-600" },
     idu3: { status: "CLOSE", color: "bg-red-600" },
-    idu2: { status: "OPEN", color: "bg-blue-500" },
+    idu2: { status: "CLOSE", color: "bg-red-600" },
     idu1: { status: "CLOSE", color: "bg-red-600" },
     pump1: { status: "STOP", color: "bg-red-600" },
-    pump2: { status: "RUN", color: "bg-blue-500" },
+    pump2: { status: "STOP", color: "bg-red-600" },
     pump3: { status: "STOP", color: "bg-red-600" },
-    compressor: { status: null, color: "" }, // Không hiển thị nhãn
+    compressor: { status: null, color: "" },
   });
 
-  // 1. Cập nhật State Modal
+  // LOGIC FETCH DATA TỪ API
+  useEffect(() => {
+    setIsMounted(true);
+    let timer;
+
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://113.164.80.153:8000/api/test"); //
+        if (!response.ok) throw new Error("Network response was not ok");
+        const data = await response.json(); //
+
+        // Cập nhật statsData
+        setStatsData({
+          waterCooling: [
+            { label: "Water Temp", value: data.waterTemp, unit: "" },
+            { label: "Temp. set pump", value: data.tempSetPump, unit: "C" },
+            { label: "HYS Temp pump", value: data.hysTempPump, unit: "" },
+            { label: "Time HYS pump", value: data.timeHysPump, unit: "Min" },
+            { label: "Temp. set fan", value: data.tempSetFan, unit: "" },
+            { label: "HYS Temp fan", value: data.hysTempFan, unit: "" },
+            { label: "Changer Time", value: data.changerTime, unit: "" },
+            { label: "Delay FS Alarm", value: data.delayFsAlarm, unit: "" },
+          ],
+          iduCooling: [
+            { label: "HYS Temp Set", value: data.hystemset, unit: "" },
+            { label: "Time HYS Temp", value: data.timehystemp, unit: "Min" },
+            { label: "HYS HUM Set", value: data.hyshumset, unit: "" },
+            { label: "Time HYS Hum", value: data.timehyshum, unit: "Min" },
+            {
+              label: "Heater Temp",
+              value: `Start ${data.heatertempstart}`,
+              unit: "",
+            },
+            {
+              label: "HT Temp. inc",
+              value: `Max ${data.httempincmax}`,
+              unit: "",
+            },
+            { label: "Time changer", value: data.timechangerht, unit: "" },
+          ],
+          rawSensors: {
+            t1: data.t1,
+            h1: data.h1,
+            t2: data.t2,
+            h2: data.h2,
+            t3: data.t3,
+            h3: data.h3,
+            t4: data.t4,
+            h4: data.h4,
+            t5: data.t5,
+            h5: data.h5,
+          },
+        });
+
+        // Cập nhật trạng thái thiết bị
+        setDeviceStatus((prev) => ({
+          ...prev,
+          pump3: {
+            status: data.runpump3 === 1 ? "RUN" : "STOP",
+            color: data.runpump3 === 1 ? "bg-blue-500" : "bg-red-600",
+          },
+          // Logic ví dụ: IDU mở nếu giá trị h tương ứng > 0
+          idu1: {
+            status: parseFloat(data.h1) > 0 ? "OPEN" : "CLOSE",
+            color: parseFloat(data.h1) > 0 ? "bg-blue-500" : "bg-red-600",
+          },
+          idu2: {
+            status: parseFloat(data.h2) > 0 ? "OPEN" : "CLOSE",
+            color: parseFloat(data.h2) > 0 ? "bg-blue-500" : "bg-red-600",
+          },
+          idu3: {
+            status: parseFloat(data.h3) > 0 ? "OPEN" : "CLOSE",
+            color: parseFloat(data.h3) > 0 ? "bg-blue-500" : "bg-red-600",
+          },
+          idu4: {
+            status: parseFloat(data.h4) > 0 ? "OPEN" : "CLOSE",
+            color: parseFloat(data.h4) > 0 ? "bg-blue-500" : "bg-red-600",
+          },
+          idu5: {
+            status: parseFloat(data.h5) > 0 ? "OPEN" : "CLOSE",
+            color: parseFloat(data.h5) > 0 ? "bg-blue-500" : "bg-red-600",
+          },
+        }));
+
+        setApiTimestamp(data.timestamp); //
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        timer = setTimeout(fetchData, 1000); // Đệ quy 1 giây
+      }
+    };
+
+    fetchData();
+    return () => clearTimeout(timer);
+  }, []);
+
   const [editModal, setEditModal] = useState({
     isVisible: false,
     label: "",
-    value: "", // Dùng cho các nút SET bình thường
-    tempValue: "", // Dùng cho EnvironmentalStats
-    humValue: "", // Dùng cho EnvironmentalStats
-    mode: "single", // "single" hoặc "environmental"
+    value: "",
+    tempValue: "",
+    humValue: "",
+    mode: "single",
   });
 
-  // 2. Hàm mở modal cho các nút SET bình thường (StatRow)
   const handleOpenEdit = (label, value) => {
-    setEditModal({
-      isVisible: true,
-      label,
-      value,
-      mode: "single",
-    });
+    setEditModal({ isVisible: true, label, value, mode: "single" });
   };
 
-  // 3. Hàm mở modal riêng cho EnvironmentalStats
   const handleOpenEnvEdit = (label, temp, hum) => {
     setEditModal({
       isVisible: true,
@@ -120,42 +200,56 @@ export default function ScadaPage() {
     });
   };
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
   const handleCloseEdit = () => {
     setEditModal({ ...editModal, isVisible: false });
   };
 
   const handleUpdate = () => {
-    const newValue = document.getElementById("modal-input").value;
+    // Logic cập nhật state thủ công vẫn giữ nguyên
+    const newValue = document.getElementById("modal-input")?.value;
     const updateArray = (arr) =>
       arr.map((item) =>
         item.label === editModal.label ? { ...item, value: newValue } : item
       );
 
-    setStatsData({
-      waterCooling: updateArray(statsData.waterCooling),
-      iduCooling: updateArray(statsData.iduCooling),
-    });
+    setStatsData((prev) => ({
+      ...prev,
+      waterCooling: updateArray(prev.waterCooling),
+      iduCooling: updateArray(prev.iduCooling),
+    }));
     handleCloseEdit();
   };
 
   if (!isMounted) return <div className="min-h-screen bg-white" />;
 
+  const DEVICES_CONFIG = [
+    { id: "idu5", label: "Valve", left: "20%", top: "69%" },
+    { id: "idu4", label: "Valve", left: "35%", top: "69%" },
+    { id: "idu3", label: "Valve", left: "53.5%", top: "69%" },
+    { id: "idu2", label: "Valve", left: "72%", top: "69%" },
+    { id: "idu1", label: "Valve", left: "88.5%", top: "69%" },
+    { id: "pump1", label: "PUMP 1", left: "39%", top: "46.5%" },
+    { id: "pump2", label: "PUMP 2", left: "56%", top: "46.5%" },
+    { id: "pump3", label: "PUMP 3", left: "72%", top: "46.5%" },
+    {
+      id: "compressor",
+      label: "GAS COMPRESSOR",
+      left: "15%",
+      top: "36%",
+      width: "20%",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-[#e0e0e0] p-4 text-black font-sans select-none">
       <div className="w-full bg-white border border-gray-400 shadow-2xl p-4 min-h-[calc(100vh-120px)] relative">
-        {/* Modal */}
+        {/* Modal - Giữ nguyên logic render của bạn */}
         {editModal.isVisible && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
             <div className="bg-white border-2 border-gray-800 p-4 shadow-2xl w-72">
               <h3 className="text-[11px] font-bold mb-3 uppercase bg-gray-100 p-1">
                 Edit: {editModal.label}
               </h3>
-
-              {/* KIỂM TRA MODE ĐỂ HIỂN THỊ GIAO DIỆN PHÙ HỢP */}
               {editModal.mode === "environmental" ? (
                 <div className="space-y-3 mb-4">
                   <div>
@@ -190,7 +284,6 @@ export default function ScadaPage() {
                   autoFocus
                 />
               )}
-
               <div className="flex gap-2">
                 <button
                   onClick={handleUpdate}
@@ -218,91 +311,84 @@ export default function ScadaPage() {
             <span className="text-green-600 bg-green-50 px-2 py-1 border border-green-200 rounded">
               ● SYSTEM READY
             </span>
-            <span className="text-gray-400 py-1">2026-01-12 21:15:37</span>
+            <span className="text-gray-400 py-1">{apiTimestamp}</span>
           </div>
         </div>
 
         <div className="grid grid-cols-12 gap-6">
-          {/* CỘT BÊN TRÁI */}
           <div className="col-span-9 border border-gray-300 bg-[#fdfdfd] relative overflow-hidden">
-            {/* Container này sẽ giữ tỉ lệ cố định 770/530 */}
             <div
               className="relative w-full mx-auto"
               style={{ aspectRatio: "770 / 530" }}
             >
-              {/* SVG NỀN - Để w-full h-full để nó lấp đầy container đã giữ tỉ lệ */}
               <img
                 src="/system.svg"
                 alt="System Illustration"
                 className="absolute inset-0 w-full h-full object-fill"
               />
-              {/* Label */}
               {DEVICES_CONFIG.map((dev) => (
                 <SystemLabel
                   key={dev.id}
                   label={dev.label}
                   position={{ left: dev.left, top: dev.top }}
-                  width={dev.width} // Truyền width từ config vào (nếu dev.width undefined thì sẽ dùng mặc định 10%)
+                  width={dev.width}
                   status={deviceStatus[dev.id]?.status}
                   statusColor={deviceStatus[dev.id]?.color}
                 />
               ))}
-              {/* IDU Stats Table */}
+
+              {/* EnvironmentalStats sử dụng dữ liệu t1-t5, h1-h5 từ API */}
               <EnvironmentalStats
                 position={{ top: "92%", left: "14.5%" }}
                 data={{
-                  temp: "12.50",
-                  hum: "63.00",
+                  temp: statsData.rawSensors.t5,
+                  hum: statsData.rawSensors.h5,
                   fanStatus: "OFF",
                   heaterStatus: "OFF",
                 }}
-                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+                onOpenEdit={handleOpenEnvEdit}
               />
-
               <EnvironmentalStats
                 position={{ top: "92%", left: "30%" }}
                 data={{
-                  temp: "13.40",
-                  hum: "54.30",
+                  temp: statsData.rawSensors.t4,
+                  hum: statsData.rawSensors.h4,
                   fanStatus: "RUN",
                   heaterStatus: "OFF",
                 }}
-                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+                onOpenEdit={handleOpenEnvEdit}
               />
-
               <EnvironmentalStats
                 position={{ top: "92%", left: "48.5%" }}
                 data={{
-                  temp: "14.30",
-                  hum: "57.30",
+                  temp: statsData.rawSensors.t3,
+                  hum: statsData.rawSensors.h3,
                   fanStatus: "RUN",
                   heaterStatus: "OFF",
                 }}
-                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+                onOpenEdit={handleOpenEnvEdit}
               />
-
               <EnvironmentalStats
                 position={{ top: "92%", left: "66.5%" }}
                 data={{
-                  temp: "12.50",
-                  hum: "63.00",
+                  temp: statsData.rawSensors.t2,
+                  hum: statsData.rawSensors.h2,
                   fanStatus: "RUN",
                   heaterStatus: "OFF",
                 }}
-                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+                onOpenEdit={handleOpenEnvEdit}
               />
-
               <EnvironmentalStats
                 position={{ top: "92%", left: "82.5%" }}
                 data={{
-                  temp: "13.40",
-                  hum: "54.30",
+                  temp: statsData.rawSensors.t1,
+                  hum: statsData.rawSensors.h1,
                   fanStatus: "RUN",
                   heaterStatus: "OFF",
                 }}
-                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+                onOpenEdit={handleOpenEnvEdit}
               />
-              {/* LỚP OVERLAY QUẠT */}
+
               <RotatingFan x={134} y={428} size={35} isRunning={false} />
               <RotatingFan x={251.5} y={428} size={35} isRunning={true} />
               <RotatingFan x={393.5} y={428} size={35} isRunning={true} />
@@ -311,7 +397,6 @@ export default function ScadaPage() {
             </div>
           </div>
 
-          {/* CỘT BÊN PHẢI */}
           <div className="col-span-3 flex flex-col gap-6">
             <div className="bg-gray-50 border-t-4 border-blue-600 p-4 shadow-md border border-gray-200">
               <h2 className="text-blue-700 font-black text-xs mb-4 border-b border-blue-100 pb-1 uppercase italic tracking-widest">
