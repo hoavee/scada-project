@@ -11,19 +11,30 @@ const StatRow = ({ label, value, unit, onEdit }) => {
 
   return (
     <div className="flex justify-between items-center mb-1 text-[11px] leading-tight">
+      {/* Cột bên trái: Label và Icon */}
       <span className="text-gray-600 font-medium whitespace-nowrap flex items-center gap-1">
         {label}:
         {isSetting && (
           <button
             onClick={() => onEdit(label, value)}
-            className="hover:text-blue-600 transition-colors text-[18px] hover:cursor-pointer"
+            className="hover:text-blue-600 transition-colors text-[16px] hover:cursor-pointer"
           >
             ⚙️
           </button>
         )}
       </span>
-      <div className="bg-black border border-gray-400 px-2 py-0.5 text-[#ffff00] font-mono w-24 text-right shadow-inner">
-        {value} <span className="text-[9px] text-gray-400 ml-1">{unit}</span>
+
+      {/* Cột bên phải: Ô đen và Unit (Dùng flex để canh thẳng hàng) */}
+      <div className="flex items-center min-w-[120px] justify-end gap-2">
+        {/* Ô màu đen */}
+        <div className="bg-black border border-gray-400 px-2 py-0.5 text-[#ffff00] font-mono w-24 text-right shadow-inner">
+          {value}
+        </div>
+
+        {/* Unit: To hơn, màu đậm hơn và cố định chiều rộng để các ô đen thẳng hàng */}
+        <span className="text-[11px] font-bold text-gray-700 w-8 text-left">
+          {unit === "C" ? <span>&deg;C</span> : unit}
+        </span>
       </div>
     </div>
   );
@@ -35,23 +46,23 @@ export default function ScadaPage() {
 
   const [statsData, setStatsData] = useState({
     waterCooling: [
-      { label: "Water Temp", value: "0.0", unit: "" },
+      { label: "Water Temp", value: "0.0", unit: "C" },
       { label: "Temp. set pump", value: "0.00", unit: "C" },
-      { label: "HYS Temp pump", value: "0.00", unit: "" },
+      { label: "HYS Temp pump", value: "0.00", unit: "C" },
       { label: "Time HYS pump", value: "0.00", unit: "Min" },
-      { label: "Temp. set fan", value: "0.00", unit: "" },
-      { label: "HYS Temp fan", value: "0.00", unit: "" },
-      { label: "Changer Time", value: "0.00", unit: "" },
-      { label: "Delay FS Alarm", value: "0.00", unit: "" },
+      { label: "Temp. set fan", value: "0.00", unit: "C" },
+      { label: "HYS Temp fan", value: "0.00", unit: "C" },
+      { label: "Changer Time", value: "0.00", unit: "H" },
+      { label: "Delay FS Alarm", value: "0.00", unit: "S" },
     ],
     iduCooling: [
-      { label: "HYS Temp Set", value: "0.00", unit: "" },
+      { label: "HYS Temp Set", value: "0.00", unit: "C" },
       { label: "Time HYS Temp", value: "0.00", unit: "Min" },
-      { label: "HYS HUM Set", value: "0.00", unit: "" },
+      { label: "HYS HUM Set", value: "0.00", unit: "%" },
       { label: "Time HYS Hum", value: "0.00", unit: "Min" },
-      { label: "Heater Temp", value: "Start 0.00", unit: "" },
-      { label: "HT Temp. inc", value: "Max 0.00", unit: "" },
-      { label: "Time changer", value: "0.00", unit: "" },
+      { label: "Heater Temp", value: "Start 0.00", unit: "C" },
+      { label: "HT Temp. inc", value: "Max 0.00", unit: "C" },
+      { label: "Time changer", value: "0.00", unit: "Min" },
     ],
     // State phụ để lưu toàn bộ dữ liệu t1-t5, h1-h5 từ API
     rawSensors: {
@@ -95,43 +106,53 @@ export default function ScadaPage() {
 
         setStatsData({
           waterCooling: [
-            { label: "Water Temp", value: data.waterTemp, unit: "" },
+            { label: "Water Temp", value: data.waterTemp, unit: "C" },
             { label: "Temp. set pump", value: data.tempSetPump, unit: "C" },
-            { label: "HYS Temp pump", value: data.hysTempPump, unit: "" },
+            { label: "HYS Temp pump", value: data.hysTempPump, unit: "C" },
             { label: "Time HYS pump", value: data.timeHysPump, unit: "Min" },
-            { label: "Temp. set fan", value: data.tempSetFan, unit: "" },
-            { label: "HYS Temp fan", value: data.hysTempFan, unit: "" },
-            { label: "Changer Time", value: data.changerTime, unit: "" },
-            { label: "Delay FS Alarm", value: data.delayFsAlarm, unit: "" },
+            { label: "Temp. set fan", value: data.tempSetFan, unit: "C" },
+            { label: "HYS Temp fan", value: data.hysTempFan, unit: "C" },
+            { label: "Changer Time", value: data.changerTime, unit: "H" },
+            { label: "Delay FS Alarm", value: data.delayFsAlarm, unit: "S" },
           ],
           iduCooling: [
-            { label: "HYS Temp Set", value: data.hystemset, unit: "" },
+            { label: "HYS Temp Set", value: data.hystemset, unit: "C" },
             { label: "Time HYS Temp", value: data.timehystemp, unit: "Min" },
-            { label: "HYS HUM Set", value: data.hyshumset, unit: "" },
+            { label: "HYS HUM Set", value: data.hyshumset, unit: "%" },
             { label: "Time HYS Hum", value: data.timehyshum, unit: "Min" },
             {
               label: "Heater Temp",
               value: `Start ${data.heatertempstart}`,
-              unit: "",
+              unit: "C",
             },
             {
               label: "HT Temp. inc",
               value: `Max ${data.httempincmax}`,
-              unit: "",
+              unit: "C",
             },
-            { label: "Time changer", value: data.timechangerht, unit: "" },
+            { label: "Time changer", value: data.timechangerht, unit: "Min" },
           ],
           rawSensors: {
-            t1: data.t1,
-            h1: data.h1,
-            t2: data.t2,
-            h2: data.h2,
-            t3: data.t3,
-            h3: data.h3,
-            t4: data.t4,
-            h4: data.h4,
-            t5: data.t5,
-            h5: data.h5,
+            t1: data.T1,
+            h1: data.H1,
+            t2: data.T2,
+            h2: data.H2,
+            t3: data.T3,
+            h3: data.H3,
+            t4: data.T4,
+            h4: data.H4,
+            t5: data.T5,
+            h5: data.H5,
+            sett1: data.setT1,
+            seth1: data.setH1,
+            sett2: data.setT2,
+            seth2: data.setH2,
+            sett3: data.setT3,
+            seth3: data.setH3,
+            sett4: data.setT4,
+            seth4: data.setH4,
+            sett5: data.setT5,
+            seth5: data.setH5,
           },
         });
 
@@ -321,50 +342,70 @@ export default function ScadaPage() {
 
               {/* EnvironmentalStats map với dữ liệu API */}
               <EnvironmentalStats
-                position={{ top: "92%", left: "14.5%" }}
+                position={{ top: "93%", left: "14.5%" }}
                 data={{
                   temp: statsData.rawSensors.t5,
                   hum: statsData.rawSensors.h5,
-                  fanStatus: "OFF",
+                  setTemp: statsData.rawSensors.sett5,
+                  setHum: statsData.rawSensors.seth5,
+                  tLabel: "T5",
+                  hLabel: "H5",
+                  fanStatus: "RUN",
                   heaterStatus: "OFF",
                 }}
                 onOpenEdit={handleOpenEnvEdit}
               />
               <EnvironmentalStats
-                position={{ top: "92%", left: "30%" }}
+                position={{ top: "93%", left: "30.5%" }}
                 data={{
                   temp: statsData.rawSensors.t4,
                   hum: statsData.rawSensors.h4,
+                  setTemp: statsData.rawSensors.sett4,
+                  setHum: statsData.rawSensors.seth4,
+                  tLabel: "T4",
+                  hLabel: "H4",
                   fanStatus: "RUN",
                   heaterStatus: "OFF",
                 }}
                 onOpenEdit={handleOpenEnvEdit}
               />
               <EnvironmentalStats
-                position={{ top: "92%", left: "48.5%" }}
+                position={{ top: "93%", left: "48.5%" }}
                 data={{
                   temp: statsData.rawSensors.t3,
                   hum: statsData.rawSensors.h3,
+                  setTemp: statsData.rawSensors.sett3,
+                  setHum: statsData.rawSensors.seth3,
+                  tLabel: "T3",
+                  hLabel: "H3",
                   fanStatus: "RUN",
                   heaterStatus: "OFF",
                 }}
                 onOpenEdit={handleOpenEnvEdit}
               />
               <EnvironmentalStats
-                position={{ top: "92%", left: "66.5%" }}
+                position={{ top: "93%", left: "66.5%" }}
                 data={{
                   temp: statsData.rawSensors.t2,
                   hum: statsData.rawSensors.h2,
+                  setTemp: statsData.rawSensors.sett2,
+                  setHum: statsData.rawSensors.seth2,
+                  tLabel: "T2",
+                  hLabel: "H2",
                   fanStatus: "RUN",
                   heaterStatus: "OFF",
                 }}
                 onOpenEdit={handleOpenEnvEdit}
               />
               <EnvironmentalStats
-                position={{ top: "92%", left: "82.5%" }}
+                position={{ top: "93%", left: "82.5%" }}
                 data={{
                   temp: statsData.rawSensors.t1,
                   hum: statsData.rawSensors.h1,
+                  setTemp: statsData.rawSensors.sett1,
+                  setHum: statsData.rawSensors.seth1,
+                  tLabel: "T1",
+                  hLabel: "H1",
                   fanStatus: "RUN",
                   heaterStatus: "OFF",
                 }}

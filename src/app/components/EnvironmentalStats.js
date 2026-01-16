@@ -1,91 +1,94 @@
-// components/EnvironmentalStats.js
 import React from "react";
-import { Settings } from "lucide-react"; // Import icon hiện đại
 
 const EnvironmentalStats = ({
   data = {
-    temp: "10.80",
-    hum: "63.00",
+    temp: "11.30",
+    hum: "61.20",
+    setTemp: "13.50",
+    setHum: "68.00",
     fanStatus: "RUN",
     heaterStatus: "OFF",
   },
-  position = { top: "92%", left: "14.5%" },
-  width = "9.5vw",
-  onOpenEdit,
+  position = { top: "50%", left: "14.5%" },
+  width = "9vw",
+  onOpenEdit, // Hàm callback từ file gốc
 }) => {
   return (
     <div
-      className="absolute border-[0.1vw] border-gray-600 bg-white text-black font-sans shadow-lg overflow-hidden flex flex-col"
+      className="absolute border-[0.05vw] border-black bg-white text-black font-sans overflow-hidden leading-tight cursor-default"
       style={{
         left: position.left,
         top: position.top,
         width: width,
         transform: "translate(-50%, -50%)",
         zIndex: 10,
-        minHeight: "fit-content",
       }}
     >
-      <table className="w-full border-collapse leading-none">
-        <tbody className="text-[0.9vw]">
-          {/* TEMP Row */}
+      <table className="w-full border-collapse table-fixed text-[0.8vw]">
+        <thead>
+          <tr className="border-b-[0.05vw] border-black">
+            <th className="border-r-[0.05vw] border-black py-[0.1vw] font-bold w-[60%] text-center">
+              TEMP HUM
+            </th>
+            <th className="py-[0.1vw] font-bold text-center">SET</th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* Temperature Row */}
           <tr className="border-b-[0.05vw] border-gray-400">
-            <td className="bg-gray-100 px-[0.4vw] py-[0.1vw] font-bold border-r-[0.05vw] border-gray-400 w-[35%]">
-              TEMP
-            </td>
-            <td className="px-[0.4vw] py-[0.1vw] font-mono font-bold">
-              <div className="flex items-center justify-end flex-nowrap gap-[0.3vw]">
-                <span>{data.temp}</span>
-                <button
-                  onClick={() =>
-                    onOpenEdit("Environmental Settings", data.temp, data.hum)
-                  }
-                  className="hover:text-blue-600 transition-colors"
-                >
-                  <Settings size="0.8vw" strokeWidth={2.5} />
-                </button>
+            <td className="border-r-[0.05vw] border-black px-[0.1vw] py-[0.1vw]">
+              <div className="flex justify-between items-center">
+                <span>{data.tLabel}</span>
+                <span className="font-bold">{data.temp}</span>
               </div>
             </td>
-          </tr>
-          {/* HUM Row */}
-          <tr className="border-b-[0.05vw] border-gray-400">
-            <td className="bg-gray-100 px-[0.4vw] py-[0.1vw] font-bold border-r-[0.05vw] border-gray-400">
-              HUM
+            {/* Clickable SET Temp */}
+            <td
+              className="bg-gray-100 px-[0.1vw] py-[0.1vw] text-right font-bold cursor-pointer hover:bg-blue-50 transition-colors"
+              onClick={() =>
+                onOpenEdit("Environmental Settings", data.temp, data.hum)
+              }
+            >
+              {data.setTemp}
             </td>
-            <td className="px-[0.4vw] py-[0.1vw] font-mono font-bold">
-              <div className="flex items-center justify-end flex-nowrap gap-[0.3vw]">
-                <span className="whitespace-nowrap">{data.hum} %</span>
-                <button
-                  onClick={() =>
-                    onOpenEdit("Environmental Settings", data.temp, data.hum)
-                  }
-                  className="hover:text-blue-600 transition-colors"
-                >
-                  <Settings size="0.8vw" strokeWidth={2.5} />
-                </button>
+          </tr>
+          {/* Humidity Row */}
+          <tr className="border-b-[0.05vw] border-black">
+            <td className="border-r-[0.05vw] border-black px-[0.1vw] py-[0.1vw]">
+              <div className="flex justify-between items-center">
+                <span>{data.hLabel}</span>
+                <span className="font-bold">{data.hum}%</span>
               </div>
             </td>
+            {/* Clickable SET Hum */}
+            <td
+              className="bg-gray-100 px-[0.1vw] py-[0.1vw] text-right font-bold cursor-pointer hover:bg-blue-50 transition-colors"
+              onClick={() =>
+                onOpenEdit("Environmental Settings", data.temp, data.hum)
+              }
+            >
+              {data.setHum}%
+            </td>
           </tr>
-          {/* FAN Row */}
+          {/* Device Headers */}
           <tr className="border-b-[0.05vw] border-gray-400">
-            <td className="bg-gray-100 px-[0.4vw] py-[0.1vw] font-bold border-r-[0.05vw] border-gray-400">
+            <td className="border-r-[0.05vw] border-black text-center font-bold py-[0.1vw]">
               FAN
             </td>
+            <td className="text-center font-bold py-[0.1vw]">HEATER</td>
+          </tr>
+          {/* Status Indicators */}
+          <tr>
             <td
-              className={`px-[0.4vw] py-[0.1vw] text-center font-black ${
-                data.fanStatus === "RUN" ? "text-green-600" : "text-red-600"
+              className={`border-r-[0.05vw] border-black text-center font-black py-[0.1vw] ${
+                data.fanStatus === "RUN" ? "text-green-700" : "text-red-600"
               }`}
             >
               {data.fanStatus}
             </td>
-          </tr>
-          {/* HEATER Row */}
-          <tr className="border-b-[0.05vw] border-gray-400">
-            <td className="bg-gray-100 px-[0.4vw] py-[0.1vw] font-bold border-r-[0.05vw] border-gray-400">
-              HEATER
-            </td>
             <td
-              className={`px-[0.4vw] py-[0.1vw] text-center font-black ${
-                data.heaterStatus === "RUN" ? "text-green-600" : "text-red-600"
+              className={`text-center font-black py-[0.1vw] ${
+                data.heaterStatus === "RUN" ? "text-green-700" : "text-red-600"
               }`}
             >
               {data.heaterStatus}
