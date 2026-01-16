@@ -453,14 +453,14 @@ export default function ScadaPage() {
                   />
                 ))}
               </div>
-              <div className="mt-4 flex gap-2">
+              {/* <div className="mt-4 flex gap-2">
                 <button className="flex-1 bg-red-600 text-white text-[10px] font-bold py-1.5 rounded active:scale-95 shadow-md">
                   EMERGENCY STOP
                 </button>
                 <button className="flex-1 bg-gray-800 text-white text-[10px] font-bold py-1.5 rounded active:scale-95 shadow-md">
                   RESET
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
