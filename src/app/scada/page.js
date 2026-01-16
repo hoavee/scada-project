@@ -7,10 +7,7 @@ import EnvironmentalStats from "../components/EnvironmentalStats";
 
 // Thành phần hiển thị các con số bên phải (Dashboard stats)
 const StatRow = ({ label, value, unit, onEdit }) => {
-  const isSetting =
-    label.toLowerCase().includes("set") ||
-    label.toLowerCase().includes("hys") ||
-    label.toLowerCase().includes("time");
+  const isSetting = label.toLowerCase().includes("set");
 
   return (
     <div className="flex justify-between items-center mb-1 text-[11px] leading-tight">
@@ -252,7 +249,7 @@ export default function ScadaPage() {
               ))}
               {/* IDU Stats Table */}
               <EnvironmentalStats
-                position={{ top: "93%", left: "14.5%" }}
+                position={{ top: "92%", left: "14.5%" }}
                 data={{
                   temp: "12.50",
                   hum: "63.00",
@@ -263,7 +260,7 @@ export default function ScadaPage() {
               />
 
               <EnvironmentalStats
-                position={{ top: "93%", left: "30%" }}
+                position={{ top: "92%", left: "30%" }}
                 data={{
                   temp: "13.40",
                   hum: "54.30",
@@ -274,7 +271,7 @@ export default function ScadaPage() {
               />
 
               <EnvironmentalStats
-                position={{ top: "93%", left: "48.5%" }}
+                position={{ top: "92%", left: "48.5%" }}
                 data={{
                   temp: "14.30",
                   hum: "57.30",
@@ -285,7 +282,7 @@ export default function ScadaPage() {
               />
 
               <EnvironmentalStats
-                position={{ top: "93%", left: "66.5%" }}
+                position={{ top: "92%", left: "66.5%" }}
                 data={{
                   temp: "12.50",
                   hum: "63.00",
@@ -296,7 +293,7 @@ export default function ScadaPage() {
               />
 
               <EnvironmentalStats
-                position={{ top: "93%", left: "82.5%" }}
+                position={{ top: "92%", left: "82.5%" }}
                 data={{
                   temp: "13.40",
                   hum: "54.30",
