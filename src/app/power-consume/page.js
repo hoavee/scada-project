@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+// Import Recharts thay thế cho Tremor
 import {
-  Card,
-  Title,
-  AreaChart,
-  Metric,
-  Text,
-  Grid,
-  Flex,
-  BadgeDelta,
-} from "@tremor/react";
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import { ArrowLeft, Zap, Activity, ShieldCheck, Calendar } from "lucide-react";
 import Link from "next/link";
 
@@ -19,7 +20,6 @@ const generateDummyData = () => {
   const data = [];
   const today = new Date();
 
-  // Tạo dữ liệu cho 40 ngày gần nhất để đảm bảo bao phủ được option "30 ngày"
   for (let i = 40; i >= 0; i--) {
     const date = new Date();
     date.setDate(today.getDate() - i);
@@ -51,8 +51,9 @@ const allMeters = [
   "POWER METER 8",
 ];
 
-const customTooltip = ({ payload, active, label }) => {
-  if (!active || !payload) return null;
+// Recharts Custom Tooltip (Dựa trên thiết kế cũ của bạn)
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload || !payload.length) return null;
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-xl ring-1 ring-black/5 z-50">
       <p className="text-[11px] font-black text-gray-500 uppercase border-b border-gray-100 pb-1 mb-2">
@@ -67,7 +68,7 @@ const customTooltip = ({ payload, active, label }) => {
                 style={{ backgroundColor: "#1d4ed8" }}
               />
               <span className="text-[10px] font-bold text-gray-600 uppercase italic">
-                {category.dataKey}:
+                {category.dataKey || category.name}:
               </span>
             </div>
             <span className="font-mono font-bold text-gray-800 text-[11px]">
@@ -84,10 +85,8 @@ export default function PowerConsumePage() {
   const [isMounted, setIsMounted] = useState(false);
   const [selectedMeters, setSelectedMeters] = useState(["MUL-DEHUM2"]);
 
-  // Tạo dữ liệu một lần duy nhất khi component mount
   const chartData = useMemo(() => generateDummyData(), []);
 
-  // Mặc định hiển thị 7 ngày gần nhất
   const [dateRange, setDateRange] = useState({
     start: "",
     end: "",
@@ -151,7 +150,6 @@ export default function PowerConsumePage() {
             </div>
           </div>
 
-          {/* DATE PICKER & QUICK SELECT */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-4 bg-white border-2 border-gray-800 p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-2 border-r-2 border-gray-100 pr-4">
@@ -210,79 +208,75 @@ export default function PowerConsumePage() {
             </div>
           </div>
 
-          <div className="bg-gray-900 px-4 py-2 border-r-4 border-green-500 shadow-lg">
-            <Text className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
+          <div className="bg-gray-900 px-4 py-2 border-r-4 border-green-500 shadow-lg text-right">
+            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
               Est. Monthly Cost
-            </Text>
-            <Metric className="text-xl font-mono text-[#ffff00] leading-none">
+            </p>
+            <p className="text-xl font-mono text-[#ffff00] leading-none">
               $14,502.20
-            </Metric>
+            </p>
           </div>
         </div>
 
-        {/* CÁC THÀNH PHẦN CÒN LẠI (GIỮ NGUYÊN HTML/CSS) */}
-        <Grid numItemsSm={2} numItemsLg={3} className="gap-6 mb-8">
-          <Card
-            className="ring-2 ring-gray-100 shadow-md"
-            decoration="top"
-            decorationColor="emerald"
-          >
-            <Flex justifyContent="between" alignItems="start">
+        {/* KPI GRID (Thay thế Grid & Card của Tremor bằng Div) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* Card 1 */}
+          <div className="bg-white p-6 border-t-4 border-emerald-500 ring-2 ring-gray-100 shadow-md rounded-sm">
+            <div className="flex justify-between items-start">
               <div>
-                <Text className="text-[11px] font-black uppercase text-gray-500">
+                <p className="text-[11px] font-black uppercase text-gray-500">
                   Total Month Usage
-                </Text>
-                <Metric className="font-black italic text-gray-800">
+                </p>
+                <p className="text-2xl font-black italic text-gray-800">
                   12,450 <span className="text-sm">kWh</span>
-                </Metric>
+                </p>
               </div>
-              <BadgeDelta deltaType="moderateIncrease">+12.5%</BadgeDelta>
-            </Flex>
+              <span className="px-2 py-1 text-xs font-bold rounded bg-emerald-100 text-emerald-700">
+                +12.5%
+              </span>
+            </div>
             <div className="w-full bg-gray-200 h-1.5 mt-6 rounded-full overflow-hidden">
               <div className="bg-emerald-500 h-full w-[83%] shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
             </div>
-          </Card>
-          <Card
-            className="ring-2 ring-gray-100 shadow-md"
-            decoration="top"
-            decorationColor="blue"
-          >
-            <Text className="text-[11px] font-black uppercase text-gray-500">
-              Efficiency Index
-            </Text>
-            <Metric className="font-black italic text-blue-700">
-              94.2 <span className="text-sm">%</span>
-            </Metric>
-            <Flex className="mt-4 border-t border-gray-50 pt-2">
-              <ShieldCheck size={14} className="text-blue-500" />
-              <Text className="text-[10px] font-bold text-blue-500 uppercase ml-2">
-                System Optimized
-              </Text>
-            </Flex>
-          </Card>
-          <Card
-            className="ring-2 ring-gray-100 shadow-md"
-            decoration="top"
-            decorationColor="orange"
-          >
-            <Text className="text-[11px] font-black uppercase text-gray-500">
-              Peak Power Demand
-            </Text>
-            <Metric className="font-black italic text-orange-600">
-              84.5 <span className="text-sm">kW</span>
-            </Metric>
-            <Text className="text-[10px] mt-4 font-bold text-gray-400 uppercase italic">
-              Last Peak: Today, 14:05 PM
-            </Text>
-          </Card>
-        </Grid>
+          </div>
 
-        <Card className="ring-2 ring-gray-200 p-0 overflow-hidden shadow-xl bg-white border-none">
+          {/* Card 2 */}
+          <div className="bg-white p-6 border-t-4 border-blue-500 ring-2 ring-gray-100 shadow-md rounded-sm">
+            <p className="text-[11px] font-black uppercase text-gray-500">
+              Efficiency Index
+            </p>
+            <p className="text-2xl font-black italic text-blue-700">
+              94.2 <span className="text-sm">%</span>
+            </p>
+            <div className="mt-4 border-t border-gray-50 pt-2 flex items-center">
+              <ShieldCheck size={14} className="text-blue-500" />
+              <span className="text-[10px] font-bold text-blue-500 uppercase ml-2">
+                System Optimized
+              </span>
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="bg-white p-6 border-t-4 border-orange-500 ring-2 ring-gray-100 shadow-md rounded-sm">
+            <p className="text-[11px] font-black uppercase text-gray-500">
+              Peak Power Demand
+            </p>
+            <p className="text-2xl font-black italic text-orange-600">
+              84.5 <span className="text-sm">kW</span>
+            </p>
+            <p className="text-[10px] mt-4 font-bold text-gray-400 uppercase italic">
+              Last Peak: Today, 14:05 PM
+            </p>
+          </div>
+        </div>
+
+        {/* MAIN CHART CARD */}
+        <div className="ring-2 ring-gray-200 overflow-hidden shadow-xl bg-white rounded-sm">
           <div className="bg-gray-800 p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <Title className="text-white text-xs font-black uppercase tracking-[0.15em] flex items-center gap-2">
+            <h2 className="text-white text-xs font-black uppercase tracking-[0.15em] flex items-center gap-2">
               <Zap size={16} className="text-[#ffff00]" /> Load Profile
               Analytics
-            </Title>
+            </h2>
 
             <div className="flex flex-wrap justify-center gap-2">
               {allMeters.map((meter) => (
@@ -308,24 +302,47 @@ export default function PowerConsumePage() {
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 h-[450px]">
             {filteredData.length > 0 ? (
-              <AreaChart
-                data={filteredData}
-                index="date"
-                categories={selectedMeters}
-                colors={["blue-700"]}
-                valueFormatter={(number) => `${number.toLocaleString()} kWh`}
-                yAxisWidth={65}
-                showAnimation={true}
-                showLegend={false}
-                showGridLines={true}
-                curveType="monotone"
-                customTooltip={customTooltip}
-                className="h-96 mt-4 z-10"
-              />
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={filteredData}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    vertical={false}
+                    strokeDasharray="3 3"
+                    stroke="#f0f0f0"
+                  />
+                  <XAxis
+                    dataKey="date"
+                    fontSize={10}
+                    fontWeight="bold"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: "#9ca3af" }}
+                  />
+                  <YAxis
+                    fontSize={10}
+                    fontWeight="bold"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: "#9ca3af" }}
+                    tickFormatter={(value) => `${value.toLocaleString()}`}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  {selectedMeters.map((meter) => (
+                    <Bar
+                      key={meter}
+                      dataKey={meter}
+                      fill="#185acb"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
-              <div className="h-96 mt-4 flex items-center justify-center border-2 border-dashed border-gray-200 text-gray-400 italic text-sm text-center">
+              <div className="h-full flex items-center justify-center border-2 border-dashed border-gray-200 text-gray-400 italic text-sm text-center">
                 No data available for the period:
                 <br />
                 {dateRange.start} to {dateRange.end}
@@ -341,7 +358,7 @@ export default function PowerConsumePage() {
               Generate Report
             </button>
           </div>
-        </Card>
+        </div>
       </div>
     </main>
   );
