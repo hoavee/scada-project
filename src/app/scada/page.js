@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import RotatingFan from "../components/RotatingFan";
 import SystemLabel from "../components/SystemLabel";
+import EnvironmentalStats from "../components/EnvironmentalStats";
 
 // Thành phần hiển thị các con số bên phải (Dashboard stats)
 const StatRow = ({ label, value, unit, onEdit }) => {
@@ -91,19 +92,40 @@ export default function ScadaPage() {
     compressor: { status: null, color: "" }, // Không hiển thị nhãn
   });
 
+  // 1. Cập nhật State Modal
   const [editModal, setEditModal] = useState({
     isVisible: false,
     label: "",
-    value: "",
+    value: "", // Dùng cho các nút SET bình thường
+    tempValue: "", // Dùng cho EnvironmentalStats
+    humValue: "", // Dùng cho EnvironmentalStats
+    mode: "single", // "single" hoặc "environmental"
   });
+
+  // 2. Hàm mở modal cho các nút SET bình thường (StatRow)
+  const handleOpenEdit = (label, value) => {
+    setEditModal({
+      isVisible: true,
+      label,
+      value,
+      mode: "single",
+    });
+  };
+
+  // 3. Hàm mở modal riêng cho EnvironmentalStats
+  const handleOpenEnvEdit = (label, temp, hum) => {
+    setEditModal({
+      isVisible: true,
+      label,
+      tempValue: temp,
+      humValue: hum,
+      mode: "environmental",
+    });
+  };
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  const handleOpenEdit = (label, value) => {
-    setEditModal({ isVisible: true, label, value });
-  };
 
   const handleCloseEdit = () => {
     setEditModal({ ...editModal, isVisible: false });
@@ -131,17 +153,47 @@ export default function ScadaPage() {
         {/* Modal */}
         {editModal.isVisible && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
-            <div className="bg-white border-2 border-gray-800 p-4 shadow-2xl w-64">
+            <div className="bg-white border-2 border-gray-800 p-4 shadow-2xl w-72">
               <h3 className="text-[11px] font-bold mb-3 uppercase bg-gray-100 p-1">
                 Edit: {editModal.label}
               </h3>
-              <input
-                id="modal-input"
-                type="text"
-                defaultValue={editModal.value}
-                className="w-full border border-gray-400 p-2 mb-4 font-mono text-center text-lg"
-                autoFocus
-              />
+
+              {/* KIỂM TRA MODE ĐỂ HIỂN THỊ GIAO DIỆN PHÙ HỢP */}
+              {editModal.mode === "environmental" ? (
+                <div className="space-y-3 mb-4">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400">
+                      TEMPERATURE
+                    </label>
+                    <input
+                      id="modal-temp"
+                      type="text"
+                      defaultValue={editModal.tempValue}
+                      className="w-full border border-gray-400 p-2 font-mono text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400">
+                      HUMIDITY (%)
+                    </label>
+                    <input
+                      id="modal-hum"
+                      type="text"
+                      defaultValue={editModal.humValue}
+                      className="w-full border border-gray-400 p-2 font-mono text-center"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <input
+                  id="modal-input"
+                  type="text"
+                  defaultValue={editModal.value}
+                  className="w-full border border-gray-400 p-2 mb-4 font-mono text-center text-lg"
+                  autoFocus
+                />
+              )}
+
               <div className="flex gap-2">
                 <button
                   onClick={handleUpdate}
@@ -198,6 +250,61 @@ export default function ScadaPage() {
                   statusColor={deviceStatus[dev.id]?.color}
                 />
               ))}
+              {/* IDU Stats Table */}
+              <EnvironmentalStats
+                position={{ top: "93%", left: "14.5%" }}
+                data={{
+                  temp: "12.50",
+                  hum: "63.00",
+                  fanStatus: "OFF",
+                  heaterStatus: "OFF",
+                }}
+                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+              />
+
+              <EnvironmentalStats
+                position={{ top: "93%", left: "30%" }}
+                data={{
+                  temp: "13.40",
+                  hum: "54.30",
+                  fanStatus: "RUN",
+                  heaterStatus: "OFF",
+                }}
+                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+              />
+
+              <EnvironmentalStats
+                position={{ top: "93%", left: "48.5%" }}
+                data={{
+                  temp: "14.30",
+                  hum: "57.30",
+                  fanStatus: "RUN",
+                  heaterStatus: "OFF",
+                }}
+                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+              />
+
+              <EnvironmentalStats
+                position={{ top: "93%", left: "66.5%" }}
+                data={{
+                  temp: "12.50",
+                  hum: "63.00",
+                  fanStatus: "RUN",
+                  heaterStatus: "OFF",
+                }}
+                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+              />
+
+              <EnvironmentalStats
+                position={{ top: "93%", left: "82.5%" }}
+                data={{
+                  temp: "13.40",
+                  hum: "54.30",
+                  fanStatus: "RUN",
+                  heaterStatus: "OFF",
+                }}
+                onOpenEdit={handleOpenEnvEdit} // Truyền function handleOpenEdit vào đây
+              />
               {/* LỚP OVERLAY QUẠT */}
               <RotatingFan x={134} y={428} size={35} isRunning={false} />
               <RotatingFan x={251.5} y={428} size={35} isRunning={true} />
