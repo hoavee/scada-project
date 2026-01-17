@@ -1,10 +1,12 @@
 // components/SystemLabel.js
+import React from "react";
+
 const SystemLabel = ({
   label,
   status,
   statusColor,
   position,
-  width = "10%",
+  width = "100px", // Nhận width px cố định
 }) => {
   return (
     <div
@@ -12,18 +14,18 @@ const SystemLabel = ({
       style={{
         left: position.left,
         top: position.top,
-        width: width, // Nhận width linh hoạt từ props
+        width: width,
         transform: "translate(-50%, -50%)",
         zIndex: 10,
       }}
     >
-      <div className="flex items-center gap-1">
-        <h2 className="font-bold text-[0.9vw] whitespace-nowrap leading-none">
+      <div className="flex items-center gap-1.5 bg-white/50 px-1 py-0.5 rounded-sm">
+        <h2 className="font-bold text-[12px] whitespace-nowrap leading-none text-gray-800 drop-shadow-sm">
           {label}
         </h2>
         {status && (
           <span
-            className={`text-[0.7vw] font-medium px-[0.3vw] py-[0.1vw] text-white rounded-[3px] leading-none ${statusColor}`}
+            className={`text-[10px] font-bold px-1.5 py-0.5 text-white rounded-[3px] leading-none shadow-sm ${statusColor}`}
           >
             {status}
           </span>

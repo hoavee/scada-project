@@ -11,11 +11,14 @@ import {
   Settings,
   HelpCircle,
   Activity,
+  Menu, // Thêm icon Menu cho nút hamburger
+  X, // Thêm icon X để đóng sidebar
 } from "lucide-react";
 import "./globals.css";
 
 export default function RootLayout({ children }) {
   const [currentTime, setCurrentTime] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State quản lý đóng mở sidebar
   const pathname = usePathname();
 
   useEffect(() => {
@@ -24,6 +27,11 @@ export default function RootLayout({ children }) {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Đóng sidebar tự động khi chuyển trang trên mobile
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
 
   const NavItem = ({ href, icon: Icon, label }) => {
     const active = pathname === href;
@@ -48,8 +56,25 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="flex h-screen bg-[#f0f2f5] font-sans overflow-hidden">
-        {/* SIDEBAR CỐ ĐỊNH */}
-        <aside className="w-20 bg-[#3b5998] flex flex-col shadow-2xl z-50">
+        {/* LỚP PHỦ (OVERLAY) - Chỉ hiện trên mobile khi sidebar mở */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-[55] lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* SIDEBAR */}
+        <aside
+          className={`
+          fixed lg:relative inset-y-0 left-0 w-20 bg-[#3b5998] flex flex-col shadow-2xl z-[60] transition-transform duration-300
+          ${
+            isSidebarOpen
+              ? "translate-x-0"
+              : "-translate-x-full lg:translate-x-0"
+          }
+        `}
+        >
           <div className="py-6 flex flex-col items-center border-b border-blue-400/30 bg-[#2a3f6d]">
             <img
               src="https://www.argotech.vn/img/logo.60fa6afb.svg"
@@ -91,12 +116,29 @@ export default function RootLayout({ children }) {
 
         {/* PHẦN NỘI DUNG CHÍNH */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="h-14 bg-white border-b border-gray-300 flex items-center justify-between px-6 shadow-sm z-40">
-            <h1 className="font-black text-gray-700 uppercase italic text-sm tracking-tighter">
-              Central <span className="text-blue-600">Management</span> System
-            </h1>
+          <header className="h-14 bg-white border-b border-gray-300 flex items-center justify-between px-4 lg:px-6 shadow-sm z-40">
+            <div className="flex items-center gap-3">
+              {/* NÚT HAMBURGER - Đã tối ưu màu sắc và độ đậm */}
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="lg:hidden p-2 hover:bg-blue-50 rounded-md transition-all active:scale-95"
+              >
+                {isSidebarOpen ? (
+                  <X size={26} strokeWidth={3} className="text-blue-600" />
+                ) : (
+                  <Menu size={26} strokeWidth={3} className="text-blue-600" />
+                )}
+              </button>
+
+              <h1 className="font-black text-gray-700 uppercase italic text-sm tracking-tighter">
+                Central <span className="text-blue-600">Management</span> System
+              </h1>
+            </div>
+
             <div className="flex items-center gap-4 text-right">
-              <div>
+              <div className="hidden sm:block">
+                {" "}
+                {/* Ẩn text status trên màn hình quá nhỏ */}
                 <p className="text-[9px] font-bold text-gray-400 uppercase leading-none tracking-wider">
                   System Status: OK
                 </p>

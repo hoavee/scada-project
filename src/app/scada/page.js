@@ -11,7 +11,6 @@ const StatRow = ({ label, value, unit, onEdit }) => {
 
   return (
     <div className="flex justify-between items-center mb-1 text-[11px] leading-tight">
-      {/* Cột bên trái: Label và Icon */}
       <span className="text-gray-600 font-medium whitespace-nowrap flex items-center gap-1">
         {label}:
         {isSetting && (
@@ -24,14 +23,10 @@ const StatRow = ({ label, value, unit, onEdit }) => {
         )}
       </span>
 
-      {/* Cột bên phải: Ô đen và Unit (Dùng flex để canh thẳng hàng) */}
       <div className="flex items-center min-w-[120px] justify-end gap-2">
-        {/* Ô màu đen */}
         <div className="bg-black border border-gray-400 px-2 py-0.5 text-[#ffff00] font-mono w-24 text-right shadow-inner">
           {value}
         </div>
-
-        {/* Unit: To hơn, màu đậm hơn và cố định chiều rộng để các ô đen thẳng hàng */}
         <span className="text-[11px] font-bold text-gray-700 w-8 text-left">
           {unit === "C" ? <span>&deg;C</span> : unit}
         </span>
@@ -42,7 +37,7 @@ const StatRow = ({ label, value, unit, onEdit }) => {
 
 export default function ScadaPage() {
   const [isMounted, setIsMounted] = useState(false);
-  const [apiTimestamp, setApiTimestamp] = useState("2026-01-12 21:15:37"); // Giá trị mặc định
+  const [apiTimestamp, setApiTimestamp] = useState("2026-01-12 21:15:37");
 
   const [statsData, setStatsData] = useState({
     waterCooling: [
@@ -64,7 +59,6 @@ export default function ScadaPage() {
       { label: "HT Temp. inc", value: "Max 0.00", unit: "C" },
       { label: "Time changer", value: "0.00", unit: "Min" },
     ],
-    // State phụ để lưu toàn bộ dữ liệu t1-t5, h1-h5 từ API
     rawSensors: {
       t1: "0",
       h1: "0",
@@ -91,11 +85,9 @@ export default function ScadaPage() {
     compressor: { status: null, color: "" },
   });
 
-  // PHẦN THÊM MỚI: GỌI API QUA PROXY
   useEffect(() => {
     setIsMounted(true);
     let timer;
-
     const fetchData = async () => {
       try {
         const response = await fetch("/api-proxy/api/test", {
@@ -103,7 +95,6 @@ export default function ScadaPage() {
         });
         if (!response.ok) throw new Error("API Offline");
         const data = await response.json();
-
         setStatsData({
           waterCooling: [
             { label: "Water Temp", value: data.waterTemp, unit: "C" },
@@ -155,7 +146,6 @@ export default function ScadaPage() {
             seth5: data.setH5,
           },
         });
-
         setDeviceStatus((prev) => ({
           ...prev,
           pump3: {
@@ -163,15 +153,13 @@ export default function ScadaPage() {
             color: data.runpump3 === 1 ? "bg-blue-500" : "bg-red-600",
           },
         }));
-
         setApiTimestamp(data.timestamp);
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
-        timer = setTimeout(fetchData, 3000000);
+        timer = setTimeout(fetchData, 3000);
       }
     };
-
     fetchData();
     return () => clearTimeout(timer);
   }, []);
@@ -194,7 +182,6 @@ export default function ScadaPage() {
     },
   ];
 
-  // LOGIC MODAL - GIỮ NGUYÊN 100%
   const [editModal, setEditModal] = useState({
     isVisible: false,
     label: "",
@@ -218,9 +205,8 @@ export default function ScadaPage() {
     });
   };
 
-  const handleCloseEdit = () => {
+  const handleCloseEdit = () =>
     setEditModal({ ...editModal, isVisible: false });
-  };
 
   const handleUpdate = () => {
     const inputElement = document.getElementById("modal-input");
@@ -230,7 +216,6 @@ export default function ScadaPage() {
       arr.map((item) =>
         item.label === editModal.label ? { ...item, value: newValue } : item
       );
-
     setStatsData((prev) => ({
       ...prev,
       waterCooling: updateArray(prev.waterCooling),
@@ -242,8 +227,8 @@ export default function ScadaPage() {
   if (!isMounted) return <div className="min-h-screen bg-white" />;
 
   return (
-    <div className="min-h-screen bg-[#e0e0e0] p-4 text-black font-sans select-none">
-      <div className="w-full bg-white border border-gray-400 shadow-2xl p-4 min-h-[calc(100vh-120px)] relative">
+    <div className="min-h-screen bg-[#e0e0e0] p-2 md:p-4 text-black font-sans select-none">
+      <div className="w-full bg-white border border-gray-400 shadow-2xl p-2 md:p-4 min-h-[calc(100vh-120px)] relative">
         {/* MODAL POPUP - GIỮ NGUYÊN */}
         {editModal.isVisible && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
@@ -251,7 +236,6 @@ export default function ScadaPage() {
               <h3 className="text-[11px] font-bold mb-3 uppercase bg-gray-100 p-1">
                 Edit: {editModal.label}
               </h3>
-
               {editModal.mode === "environmental" ? (
                 <div className="space-y-3 mb-4">
                   <div>
@@ -286,7 +270,6 @@ export default function ScadaPage() {
                   autoFocus
                 />
               )}
-
               <div className="flex gap-2">
                 <button
                   onClick={handleUpdate}
@@ -306,8 +289,8 @@ export default function ScadaPage() {
         )}
 
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 border-b-2 border-gray-100 pb-2">
-          <h1 className="text-xl font-black text-gray-700 tracking-tighter uppercase italic">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b-2 border-gray-100 pb-2 gap-2">
+          <h1 className="text-lg md:text-xl font-black text-gray-700 tracking-tighter uppercase italic">
             SCADA Monitoring Console
           </h1>
           <div className="flex gap-4 text-[10px] font-bold">
@@ -318,10 +301,13 @@ export default function ScadaPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-6">
-          <div className="col-span-9 border border-gray-300 bg-[#fdfdfd] relative overflow-hidden">
+        {/* Main Grid: Thay đổi grid sang flex-col trên mobile */}
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
+          {/* Cột trái: Chứa sơ đồ, thêm overflow-auto để kéo trên mobile */}
+          <div className="lg:col-span-9 border border-gray-300 bg-[#fdfdfd] relative overflow-auto">
+            {/* Đặt min-width để sơ đồ không bị bóp méo, giữ nguyên tỷ lệ */}
             <div
-              className="relative w-full mx-auto"
+              className="relative w-full mx-auto min-w-[1180px]"
               style={{ aspectRatio: "770 / 530" }}
             >
               <img
@@ -340,7 +326,7 @@ export default function ScadaPage() {
                 />
               ))}
 
-              {/* EnvironmentalStats map với dữ liệu API */}
+              {/* EnvironmentalStats - Dữ liệu API */}
               <EnvironmentalStats
                 position={{ top: "93%", left: "14.5%" }}
                 data={{
@@ -420,7 +406,8 @@ export default function ScadaPage() {
             </div>
           </div>
 
-          <div className="col-span-3 flex flex-col gap-6">
+          {/* Cột phải: Xuống dưới trên mobile */}
+          <div className="lg:col-span-3 flex flex-col gap-6">
             <div className="bg-gray-50 border-t-4 border-blue-600 p-4 shadow-md border border-gray-200">
               <h2 className="text-blue-700 font-black text-xs mb-4 border-b border-blue-100 pb-1 uppercase italic tracking-widest">
                 Water Cooling System
@@ -453,14 +440,6 @@ export default function ScadaPage() {
                   />
                 ))}
               </div>
-              {/* <div className="mt-4 flex gap-2">
-                <button className="flex-1 bg-red-600 text-white text-[10px] font-bold py-1.5 rounded active:scale-95 shadow-md">
-                  EMERGENCY STOP
-                </button>
-                <button className="flex-1 bg-gray-800 text-white text-[10px] font-bold py-1.5 rounded active:scale-95 shadow-md">
-                  RESET
-                </button>
-              </div> */}
             </div>
           </div>
         </div>

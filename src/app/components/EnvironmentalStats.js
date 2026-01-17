@@ -8,14 +8,16 @@ const EnvironmentalStats = ({
     setHum: "68.00",
     fanStatus: "RUN",
     heaterStatus: "OFF",
+    tLabel: "T1",
+    hLabel: "H1",
   },
   position = { top: "50%", left: "14.5%" },
-  width = "9vw",
-  onOpenEdit, // Hàm callback từ file gốc
+  width = "110px", // Sử dụng px cố định thay cho vw
+  onOpenEdit,
 }) => {
   return (
     <div
-      className="absolute border-[0.05vw] border-black bg-white text-black font-sans overflow-hidden leading-tight cursor-default"
+      className="absolute border border-black bg-white text-black font-sans overflow-hidden leading-tight cursor-default shadow-sm"
       style={{
         left: position.left,
         top: position.top,
@@ -24,70 +26,72 @@ const EnvironmentalStats = ({
         zIndex: 10,
       }}
     >
-      <table className="w-full border-collapse table-fixed text-[0.8vw]">
+      <table className="w-full border-collapse table-fixed text-[11px]">
         <thead>
-          <tr className="border-b-[0.05vw] border-black">
-            <th className="border-r-[0.05vw] border-black py-[0.1vw] font-bold w-[60%] text-center">
+          <tr className="border-b border-black">
+            <th className="border-r border-black py-1 font-bold w-[60%] text-center bg-gray-50">
               TEMP HUM
             </th>
-            <th className="py-[0.1vw] font-bold text-center">SET</th>
+            <th className="py-1 font-bold text-center bg-gray-50">SET</th>
           </tr>
         </thead>
         <tbody>
           {/* Temperature Row */}
-          <tr className="border-b-[0.05vw] border-gray-400">
-            <td className="border-r-[0.05vw] border-black px-[0.1vw] py-[0.1vw]">
+          <tr className="border-b border-gray-300">
+            <td className="border-r border-black px-1 py-1">
               <div className="flex justify-between items-center">
-                <span>{data.tLabel}</span>
+                <span className="text-[10px] text-gray-500">{data.tLabel}</span>
                 <span className="font-bold">{data.temp}</span>
               </div>
             </td>
-            {/* Clickable SET Temp */}
             <td
-              className="bg-gray-100 px-[0.1vw] py-[0.1vw] text-right font-bold cursor-pointer hover:bg-blue-50 transition-colors"
+              className="bg-yellow-50 px-1 py-1 text-right font-bold cursor-pointer hover:bg-blue-100 transition-colors"
               onClick={() =>
-                onOpenEdit("Environmental Settings", data.temp, data.hum)
+                onOpenEdit(
+                  `Set Temperature ${data.tLabel}`,
+                  data.temp,
+                  data.hum
+                )
               }
             >
               {data.setTemp}
             </td>
           </tr>
           {/* Humidity Row */}
-          <tr className="border-b-[0.05vw] border-black">
-            <td className="border-r-[0.05vw] border-black px-[0.1vw] py-[0.1vw]">
+          <tr className="border-b border-black">
+            <td className="border-r border-black px-1 py-1">
               <div className="flex justify-between items-center">
-                <span>{data.hLabel}</span>
+                <span className="text-[10px] text-gray-500">{data.hLabel}</span>
                 <span className="font-bold">{data.hum}%</span>
               </div>
             </td>
-            {/* Clickable SET Hum */}
             <td
-              className="bg-gray-100 px-[0.1vw] py-[0.1vw] text-right font-bold cursor-pointer hover:bg-blue-50 transition-colors"
+              className="bg-yellow-50 px-1 py-1 text-right font-bold cursor-pointer hover:bg-blue-100 transition-colors"
               onClick={() =>
-                onOpenEdit("Environmental Settings", data.temp, data.hum)
+                onOpenEdit(`Set Humidity ${data.hLabel}`, data.temp, data.hum)
               }
             >
               {data.setHum}%
             </td>
           </tr>
           {/* Device Headers */}
-          <tr className="border-b-[0.05vw] border-gray-400">
-            <td className="border-r-[0.05vw] border-black text-center font-bold py-[0.1vw]">
+          <tr className="border-b border-gray-300 bg-gray-50">
+            <td className="border-r border-black text-center font-bold py-0.5 text-[9px]">
               FAN
             </td>
-            <td className="text-center font-bold py-[0.1vw]">HEATER</td>
+            <td className="text-center font-bold py-0.5 text-[9px]">HEATER</td>
           </tr>
           {/* Status Indicators */}
           <tr>
             <td
-              className={`border-r-[0.05vw] border-black text-center font-black py-[0.1vw] ${
+              className={`border-r border-black text-center font-black py-1 text-[10px] ${
                 data.fanStatus === "RUN" ? "text-green-700" : "text-red-600"
               }`}
             >
               {data.fanStatus}
             </td>
             <td
-              className={`text-center font-black py-[0.1vw] ${
+              className={`text-center font-black py-1 text-[10px] ${
                 data.heaterStatus === "RUN" ? "text-green-700" : "text-red-600"
               }`}
             >
