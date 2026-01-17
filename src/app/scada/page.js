@@ -243,8 +243,6 @@ export default function ScadaPage() {
                     <input
                       id="modal-temp"
                       type="text"
-                      inputMode="decimal" // Quan trọng: Kích hoạt bàn phím số (có dấu chấm thập phân) trên Mobile
-                      pattern="[0-9]*" // Hỗ trợ thêm cho một số trình duyệt cũ
                       defaultValue={editModal.tempValue}
                       className="w-full border border-gray-400 p-2 font-mono text-center"
                       autoFocus
@@ -257,8 +255,6 @@ export default function ScadaPage() {
                     <input
                       id="modal-hum"
                       type="text"
-                      inputMode="decimal" // Quan trọng: Kích hoạt bàn phím số (có dấu chấm thập phân) trên Mobile
-                      pattern="[0-9]*" // Hỗ trợ thêm cho một số trình duyệt cũ
                       defaultValue={editModal.humValue}
                       className="w-full border border-gray-400 p-2 font-mono text-center"
                       autoFocus
@@ -268,9 +264,6 @@ export default function ScadaPage() {
               ) : (
                 <input
                   id="modal-input"
-                  type="text" // Dùng text để tránh các nút tăng giảm mặc định của trình duyệt
-                  inputMode="decimal" // Quan trọng: Kích hoạt bàn phím số (có dấu chấm thập phân) trên Mobile
-                  pattern="[0-9]*" // Hỗ trợ thêm cho một số trình duyệt cũ
                   defaultValue={editModal.value}
                   className="w-full border border-gray-400 p-2 mb-4 font-mono text-center text-lg"
                   autoFocus
