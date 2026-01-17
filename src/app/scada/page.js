@@ -289,7 +289,7 @@ export default function ScadaPage() {
         )}
 
         {/* Main Grid: Thay đổi grid sang flex-col trên mobile */}
-        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 pb-20">
           {/* Cột trái: Chứa sơ đồ, thêm overflow-auto để kéo trên mobile */}
           <div className="lg:col-span-9 border border-gray-300 bg-[#fdfdfd] relative overflow-auto">
             {/* Đặt min-width để sơ đồ không bị bóp méo, giữ nguyên tỷ lệ */}
