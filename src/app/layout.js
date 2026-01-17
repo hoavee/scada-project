@@ -116,7 +116,7 @@ export default function RootLayout({ children }) {
 
         {/* PHẦN NỘI DUNG CHÍNH */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="h-14 bg-white border-b border-gray-300 flex items-center justify-between px-4 lg:px-6 shadow-sm z-40">
+          <header className="h-14 bg-white border-b border-gray-300 flex items-center justify-between px-4 lg:px-6 shadow-sm z-[100]">
             <div className="flex items-center gap-3">
               {/* NÚT HAMBURGER - Đã tối ưu màu sắc và độ đậm */}
               <button
