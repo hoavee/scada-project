@@ -135,31 +135,6 @@ export default function PowerMeterPage() {
     <div className="min-h-screen bg-[#d1d1d1] p-2 sm:p-6 text-black font-sans select-none">
       {/* Nới rộng container lên tối đa 1600px để các ô không bị chèn ép */}
       <div className="max-w-[1600px] mx-auto bg-white border border-gray-400 shadow-2xl p-4 sm:p-8 min-h-[90vh] flex flex-col">
-        {/* Header Section */}
-        <div className="flex justify-between items-end mb-6 border-b-4 border-gray-800 pb-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="bg-green-700 text-white px-2 py-0.5 text-xs font-bold rounded shadow-sm">
-                SYSTEM ACTIVE
-              </span>
-              <span className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">
-                EMS Monitoring v2.0
-              </span>
-            </div>
-            <h1 className="text-3xl font-black text-gray-800 tracking-tighter uppercase italic leading-none">
-              Power Metering <span className="text-green-700">Dashboard</span>
-            </h1>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] font-bold text-gray-400 font-mono mb-1">
-              LOCAL TIME SERVER
-            </div>
-            <div className="text-xl font-mono font-bold bg-gray-100 px-3 py-1 border border-gray-200 rounded">
-              2026-01-12 21:40:05
-            </div>
-          </div>
-        </div>
-
         {/* Grid Area - Nới rộng gap và điều chỉnh cột */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-x-6 gap-y-6 flex-1">
           {meters.map((meter, index) => (
@@ -178,31 +153,6 @@ export default function PowerMeterPage() {
                 8/8 ONLINE
               </span>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[9px] font-bold text-gray-400 uppercase">
-                Comm. Protocol
-              </span>
-              <span className="text-[11px] font-bold text-gray-700">
-                MODBUS/TCP IP
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[9px] font-bold text-gray-400 uppercase">
-                Data Refresh
-              </span>
-              <span className="text-[11px] font-bold text-gray-700">
-                Every 1.0s
-              </span>
-            </div>
-          </div>
-
-          <div className="flex gap-2">
-            <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-[10px] font-bold py-2 px-4 border border-gray-300 transition-all active:translate-y-0.5">
-              SYSTEM LOGS
-            </button>
-            <button className="bg-green-700 hover:bg-green-800 text-white text-[10px] font-bold py-2 px-6 border border-green-900 shadow-md transition-all active:translate-y-0.5">
-              GENERATE REPORT
-            </button>
           </div>
         </div>
       </div>

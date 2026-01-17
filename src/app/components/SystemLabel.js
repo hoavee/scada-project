@@ -20,12 +20,12 @@ const SystemLabel = ({
       }}
     >
       <div className="flex items-center gap-1.5 bg-white/50 px-1 py-0.5 rounded-sm">
-        <h2 className="font-bold text-[12px] whitespace-nowrap leading-none text-gray-800 drop-shadow-sm">
+        <h2 className="font-bold text-[14px] whitespace-nowrap leading-none text-gray-800 drop-shadow-sm">
           {label}
         </h2>
         {status && (
           <span
-            className={`text-[10px] font-bold px-1.5 py-0.5 text-white rounded-[3px] leading-none shadow-sm ${statusColor}`}
+            className={`text-[12px] font-bold px-1.5 py-0.5 text-white rounded-[3px] leading-none shadow-sm ${statusColor}`}
           >
             {status}
           </span>

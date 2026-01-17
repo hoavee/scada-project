@@ -12,7 +12,7 @@ const EnvironmentalStats = ({
     hLabel: "H1",
   },
   position = { top: "50%", left: "14.5%" },
-  width = "110px", // Sử dụng px cố định thay cho vw
+  width = "150px", // Sử dụng px cố định thay cho vw
   onOpenEdit,
 }) => {
   return (

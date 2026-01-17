@@ -288,19 +288,6 @@ export default function ScadaPage() {
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b-2 border-gray-100 pb-2 gap-2">
-          <h1 className="text-lg md:text-xl font-black text-gray-700 tracking-tighter uppercase italic">
-            SCADA Monitoring Console
-          </h1>
-          <div className="flex gap-4 text-[10px] font-bold">
-            <span className="text-green-600 bg-green-50 px-2 py-1 border border-green-200 rounded">
-              ● SYSTEM READY
-            </span>
-            <span className="text-gray-400 py-1">{apiTimestamp}</span>
-          </div>
-        </div>
-
         {/* Main Grid: Thay đổi grid sang flex-col trên mobile */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
           {/* Cột trái: Chứa sơ đồ, thêm overflow-auto để kéo trên mobile */}
