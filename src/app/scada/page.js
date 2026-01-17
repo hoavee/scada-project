@@ -157,7 +157,7 @@ export default function ScadaPage() {
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
-        timer = setTimeout(fetchData, 3000);
+        timer = setTimeout(fetchData, 300000);
       }
     };
     fetchData();
@@ -224,10 +224,8 @@ export default function ScadaPage() {
     handleCloseEdit();
   };
 
-  if (!isMounted) return <div className="min-h-screen bg-white" />;
-
   return (
-    <div className="min-h-screen bg-[#e0e0e0] p-2 md:p-4 text-black font-sans select-none">
+    <div className="bg-[#e0e0e0] p-2 md:p-4 text-black font-sans select-none">
       <div className="w-full bg-white border border-gray-400 shadow-2xl p-2 md:p-4 min-h-[calc(100vh-120px)] relative">
         {/* MODAL POPUP - GIỮ NGUYÊN */}
         {editModal.isVisible && (
@@ -245,8 +243,11 @@ export default function ScadaPage() {
                     <input
                       id="modal-temp"
                       type="text"
+                      inputMode="decimal" // Quan trọng: Kích hoạt bàn phím số (có dấu chấm thập phân) trên Mobile
+                      pattern="[0-9]*" // Hỗ trợ thêm cho một số trình duyệt cũ
                       defaultValue={editModal.tempValue}
                       className="w-full border border-gray-400 p-2 font-mono text-center"
+                      autoFocus
                     />
                   </div>
                   <div>
@@ -256,15 +257,20 @@ export default function ScadaPage() {
                     <input
                       id="modal-hum"
                       type="text"
+                      inputMode="decimal" // Quan trọng: Kích hoạt bàn phím số (có dấu chấm thập phân) trên Mobile
+                      pattern="[0-9]*" // Hỗ trợ thêm cho một số trình duyệt cũ
                       defaultValue={editModal.humValue}
                       className="w-full border border-gray-400 p-2 font-mono text-center"
+                      autoFocus
                     />
                   </div>
                 </div>
               ) : (
                 <input
                   id="modal-input"
-                  type="text"
+                  type="text" // Dùng text để tránh các nút tăng giảm mặc định của trình duyệt
+                  inputMode="decimal" // Quan trọng: Kích hoạt bàn phím số (có dấu chấm thập phân) trên Mobile
+                  pattern="[0-9]*" // Hỗ trợ thêm cho một số trình duyệt cũ
                   defaultValue={editModal.value}
                   className="w-full border border-gray-400 p-2 mb-4 font-mono text-center text-lg"
                   autoFocus

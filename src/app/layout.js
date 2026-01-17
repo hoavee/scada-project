@@ -55,7 +55,7 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className="flex h-screen bg-[#f0f2f5] font-sans overflow-hidden">
+      <body className="flex min-h-screen bg-[#f0f2f5] font-sans">
         {/* LỚP PHỦ (OVERLAY) - Chỉ hiện trên mobile khi sidebar mở */}
         {isSidebarOpen && (
           <div
@@ -67,7 +67,7 @@ export default function RootLayout({ children }) {
         {/* SIDEBAR */}
         <aside
           className={`
-          fixed lg:relative inset-y-0 left-0 w-20 bg-[#3b5998] flex flex-col shadow-2xl z-[60] transition-transform duration-300
+          fixed lg:relative inset-y-0 left-0 w-20 bg-[#3b5998] flex flex-col shadow-2xl z-[120] transition-transform duration-300
           ${
             isSidebarOpen
               ? "translate-x-0"
@@ -115,13 +115,13 @@ export default function RootLayout({ children }) {
         </aside>
 
         {/* PHẦN NỘI DUNG CHÍNH */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="h-14 bg-white border-b border-gray-300 flex items-center justify-between px-4 lg:px-6 shadow-sm z-[100]">
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="sticky top-0 h-14 bg-white border-b border-gray-300 flex items-center justify-between px-4 lg:px-6 shadow-sm z-[110]">
             <div className="flex items-center gap-3">
               {/* NÚT HAMBURGER - Đã tối ưu màu sắc và độ đậm */}
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden p-2 hover:bg-blue-50 rounded-md transition-all active:scale-95"
+                className="lg:hidden p-2 hover:bg-blue-50 rounded-md transition-all active:scale-95 z-[120]"
               >
                 {isSidebarOpen ? (
                   <X size={26} strokeWidth={3} className="text-blue-600" />
@@ -152,9 +152,7 @@ export default function RootLayout({ children }) {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto bg-[#f8f9fa]">
-            {children}
-          </main>
+          <main className="flex-1 bg-[#f8f9fa]">{children}</main>
 
           <footer className="h-8 bg-gray-200 border-t border-gray-300 flex items-center px-6 text-[9px] font-bold text-gray-500 uppercase tracking-[0.15em]">
             SCADA Management System © 2026
