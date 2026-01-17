@@ -130,26 +130,6 @@ export default function PowerConsumePage() {
       <div className="max-w-7xl mx-auto bg-white border-2 border-gray-300 shadow-[10px_10px_0px_0px_rgba(0,0,0,0.05)] p-6">
         {/* HEADER */}
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-8 border-b-4 border-gray-800 pb-6 gap-6">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="p-2 bg-gray-100 border-2 border-gray-400 hover:bg-gray-200 shadow-sm transition-all active:scale-95"
-            >
-              <ArrowLeft size={24} className="text-gray-700" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-black uppercase italic text-gray-800 tracking-tighter leading-none">
-                Energy <span className="text-green-700">Consumption</span>
-              </h1>
-              <div className="flex items-center gap-2 mt-1">
-                <Activity size={12} className="text-green-600 animate-pulse" />
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-                  Real-time Power Analytics
-                </span>
-              </div>
-            </div>
-          </div>
-
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-4 bg-white border-2 border-gray-800 p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-2 border-r-2 border-gray-100 pr-4">
