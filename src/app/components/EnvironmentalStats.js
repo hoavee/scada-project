@@ -49,8 +49,8 @@ const EnvironmentalStats = ({
               onClick={() =>
                 onOpenEdit(
                   `Set Temperature ${data.tLabel}`,
-                  data.temp,
-                  data.hum
+                  data.setTemp,
+                  data.setHum
                 )
               }
             >
@@ -68,7 +68,11 @@ const EnvironmentalStats = ({
             <td
               className="bg-yellow-50 px-1 py-1 text-right font-bold cursor-pointer hover:bg-blue-100 transition-colors"
               onClick={() =>
-                onOpenEdit(`Set Humidity ${data.hLabel}`, data.temp, data.hum)
+                onOpenEdit(
+                  `Set Humidity ${data.hLabel}`,
+                  data.setTemp,
+                  data.setHum
+                )
               }
             >
               {data.setHum}%
