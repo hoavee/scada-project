@@ -78,6 +78,24 @@ export const DEVICES_CONFIG = [
     isStacked: false,
     labelSize: "14px",
   },
+  {
+    id: "ct1",
+    label: "CT-1",
+    left: "53%",
+    top: "19%",
+    width: "200px",
+    isStacked: false,
+    labelSize: "24px",
+  },
+  {
+    id: "ct2",
+    label: "CT-2",
+    left: "80.5%",
+    top: "19%",
+    width: "200px",
+    isStacked: false,
+    labelSize: "24px",
+  },
 ];
 
 // 2. Trạng thái mặc định ban đầu
