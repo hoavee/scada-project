@@ -6,7 +6,10 @@ const SystemLabel = ({
   status,
   statusColor,
   position,
-  width = "100px", // Nhận width px cố định
+  width = "120px",
+  labelSize = "14px", // Cỡ chữ của label chính
+  statusSize = "12px", // Cỡ chữ của tag status
+  isStacked = false, // true: 2 dòng, false: 1 dòng (mặc định)
 }) => {
   return (
     <div
@@ -19,13 +22,21 @@ const SystemLabel = ({
         zIndex: 10,
       }}
     >
-      <div className="flex items-center gap-1.5 bg-white/50 px-1 py-0.5 rounded-sm">
-        <h2 className="font-bold text-[14px] whitespace-nowrap leading-none text-gray-800 drop-shadow-sm">
+      <div
+        className={`flex items-center bg-white/50 px-2 py-1 rounded-sm shadow-sm 
+          ${isStacked ? "flex-col gap-1 text-center" : "flex-row gap-1.5"}`}
+      >
+        <h2
+          className="font-bold leading-tight text-gray-800 drop-shadow-sm break-words"
+          style={{ fontSize: labelSize }}
+        >
           {label}
         </h2>
+
         {status && (
           <span
-            className={`text-[12px] font-bold px-1.5 py-0.5 text-white rounded-[3px] leading-none shadow-sm ${statusColor}`}
+            className={`font-bold px-1.5 py-0.5 text-white rounded-[3px] leading-none shadow-sm shrink-0 ${statusColor}`}
+            style={{ fontSize: statusSize }}
           >
             {status}
           </span>

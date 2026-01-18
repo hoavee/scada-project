@@ -5,6 +5,9 @@ import RotatingFan from "../components/RotatingFan";
 import SystemLabel from "../components/SystemLabel";
 import EnvironmentalStats from "../components/EnvironmentalStats";
 
+// IMPORT cấu hình từ file vừa tạo
+import { DEVICES_CONFIG, INITIAL_DEVICE_STATUS } from "../constants/devices";
+
 // Thành phần hiển thị các con số bên phải (Dashboard stats)
 const StatRow = ({ label, value, unit, onEdit }) => {
   const isSetting = label.toLowerCase().includes("set");
@@ -73,17 +76,7 @@ export default function ScadaPage() {
     },
   });
 
-  const [deviceStatus, setDeviceStatus] = useState({
-    idu5: { status: "CLOSE", color: "bg-red-600" },
-    idu4: { status: "CLOSE", color: "bg-red-600" },
-    idu3: { status: "CLOSE", color: "bg-red-600" },
-    idu2: { status: "CLOSE", color: "bg-red-600" },
-    idu1: { status: "CLOSE", color: "bg-red-600" },
-    pump1: { status: "STOP", color: "bg-red-600" },
-    pump2: { status: "STOP", color: "bg-red-600" },
-    pump3: { status: "STOP", color: "bg-red-600" },
-    compressor: { status: null, color: "" },
-  });
+  const [deviceStatus, setDeviceStatus] = useState(INITIAL_DEVICE_STATUS);
 
   useEffect(() => {
     setIsMounted(true);
@@ -163,24 +156,6 @@ export default function ScadaPage() {
     fetchData();
     return () => clearTimeout(timer);
   }, []);
-
-  const DEVICES_CONFIG = [
-    { id: "idu5", label: "Valve", left: "20%", top: "69%" },
-    { id: "idu4", label: "Valve", left: "35%", top: "69%" },
-    { id: "idu3", label: "Valve", left: "53.5%", top: "69%" },
-    { id: "idu2", label: "Valve", left: "72%", top: "69%" },
-    { id: "idu1", label: "Valve", left: "88.5%", top: "69%" },
-    { id: "pump1", label: "PUMP 1", left: "39%", top: "46.5%" },
-    { id: "pump2", label: "PUMP 2", left: "56%", top: "46.5%" },
-    { id: "pump3", label: "PUMP 3", left: "72%", top: "46.5%" },
-    {
-      id: "compressor",
-      label: "GAS COMPRESSOR",
-      left: "15%",
-      top: "36%",
-      width: "20%",
-    },
-  ];
 
   const [editModal, setEditModal] = useState({
     isVisible: false,
@@ -304,11 +279,10 @@ export default function ScadaPage() {
               {DEVICES_CONFIG.map((dev) => (
                 <SystemLabel
                   key={dev.id}
-                  label={dev.label}
-                  position={{ left: dev.left, top: dev.top }}
-                  width={dev.width}
+                  {...dev} // Sử dụng spread operator để truyền nhanh các props (label, left, top, width,...)
                   status={deviceStatus[dev.id]?.status}
                   statusColor={deviceStatus[dev.id]?.color}
+                  position={{ left: dev.left, top: dev.top }}
                 />
               ))}
 
