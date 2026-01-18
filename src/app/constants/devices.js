@@ -69,6 +69,15 @@ export const DEVICES_CONFIG = [
     isStacked: false,
     labelSize: "14px",
   },
+  {
+    id: "wlevel",
+    label: "Water Level",
+    left: "36%",
+    top: "11%",
+    width: "200px",
+    isStacked: false,
+    labelSize: "14px",
+  },
 ];
 
 // 2. Trạng thái mặc định ban đầu
