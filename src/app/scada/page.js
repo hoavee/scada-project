@@ -1,17 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import RotatingFan from "../components/RotatingFan";
 import SystemLabel from "../components/SystemLabel";
 import EnvironmentalStats from "../components/EnvironmentalStats";
-
-// IMPORT cấu hình từ file vừa tạo
 import { DEVICES_CONFIG, INITIAL_DEVICE_STATUS } from "../constants/devices";
 
-// Thành phần hiển thị các con số bên phải (Dashboard stats)
+// Giữ nguyên StatRow như cũ
 const StatRow = ({ label, value, unit, onEdit }) => {
   const isSetting = label.toLowerCase().includes("set");
-
   return (
     <div className="flex justify-between items-center mb-1 text-[11px] leading-tight">
       <span className="text-gray-600 font-medium whitespace-nowrap flex items-center gap-1">
@@ -25,7 +22,6 @@ const StatRow = ({ label, value, unit, onEdit }) => {
           </button>
         )}
       </span>
-
       <div className="flex items-center min-w-[120px] justify-end gap-2">
         <div className="bg-black border border-gray-400 px-2 py-0.5 text-[#ffff00] font-mono w-24 text-right shadow-inner">
           {value}
@@ -40,8 +36,10 @@ const StatRow = ({ label, value, unit, onEdit }) => {
 
 export default function ScadaPage() {
   const [isMounted, setIsMounted] = useState(false);
-  const [apiTimestamp, setApiTimestamp] = useState("2026-01-12 21:15:37");
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const imgRef = useRef(null); // Sử dụng ref để kiểm tra trạng thái ảnh thực tế
 
+  const [apiTimestamp, setApiTimestamp] = useState("2026-01-12 21:15:37");
   const [statsData, setStatsData] = useState({
     waterCooling: [
       { label: "Water Temp", value: "0.0", unit: "C" },
@@ -80,6 +78,12 @@ export default function ScadaPage() {
 
   useEffect(() => {
     setIsMounted(true);
+
+    // Kiểm tra nếu ảnh đã được load xong từ trước (do cache)
+    if (imgRef.current && imgRef.current.complete) {
+      setIsImageLoaded(true);
+    }
+
     let timer;
     const fetchData = async () => {
       try {
@@ -165,12 +169,9 @@ export default function ScadaPage() {
     humValue: "",
     mode: "single",
   });
-
-  const handleOpenEdit = (label, value) => {
+  const handleOpenEdit = (label, value) =>
     setEditModal({ isVisible: true, label, value, mode: "single" });
-  };
-
-  const handleOpenEnvEdit = (label, temp, hum) => {
+  const handleOpenEnvEdit = (label, temp, hum) =>
     setEditModal({
       isVisible: true,
       label,
@@ -178,8 +179,6 @@ export default function ScadaPage() {
       humValue: hum,
       mode: "environmental",
     });
-  };
-
   const handleCloseEdit = () =>
     setEditModal({ ...editModal, isVisible: false });
 
@@ -202,7 +201,17 @@ export default function ScadaPage() {
   return (
     <div className="bg-[#e0e0e0] p-2 md:p-4 text-black font-sans select-none">
       <div className="w-full bg-white border border-gray-400 shadow-2xl p-2 md:p-4 min-h-[calc(100vh-120px)] relative">
-        {/* MODAL POPUP - GIỮ NGUYÊN */}
+        {/* LOADING OVERLAY - Xử lý mượt hơn */}
+        {isMounted && !isImageLoaded && (
+          <div className="absolute inset-0 z-[150] bg-white flex flex-col items-center justify-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-[10px] font-bold tracking-widest text-blue-600 uppercase">
+              Loading System Map...
+            </p>
+          </div>
+        )}
+
+        {/* MODAL & GRID CONTENT GIỮ NGUYÊN NHƯ CŨ... */}
         {editModal.isVisible && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
             <div className="bg-white border-2 border-gray-800 p-4 shadow-2xl w-72">
@@ -232,7 +241,6 @@ export default function ScadaPage() {
                       type="text"
                       defaultValue={editModal.humValue}
                       className="w-full border border-gray-400 p-2 font-mono text-center"
-                      autoFocus
                     />
                   </div>
                 </div>
@@ -262,101 +270,58 @@ export default function ScadaPage() {
           </div>
         )}
 
-        {/* Main Grid: Thay đổi grid sang flex-col trên mobile */}
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 pb-20">
-          {/* Cột trái: Chứa sơ đồ, thêm overflow-auto để kéo trên mobile */}
           <div className="lg:col-span-9 border border-gray-300 bg-[#fdfdfd] relative overflow-auto">
-            {/* Đặt min-width để sơ đồ không bị bóp méo, giữ nguyên tỷ lệ */}
             <div
               className="relative w-full mx-auto min-w-[1180px]"
               style={{ aspectRatio: "770 / 530" }}
             >
               <img
+                ref={imgRef}
                 src="/system.svg"
                 alt="System"
                 className="absolute inset-0 w-full h-full object-fill"
+                onLoad={() => setIsImageLoaded(true)}
+                onError={() => setIsImageLoaded(true)}
               />
+
+              {/* RENDER COMPONENTS TRÊN NỀN SVG */}
               {DEVICES_CONFIG.map((dev) => (
                 <SystemLabel
                   key={dev.id}
-                  {...dev} // Sử dụng spread operator để truyền nhanh các props (label, left, top, width,...)
+                  {...dev}
                   status={deviceStatus[dev.id]?.status}
                   statusColor={deviceStatus[dev.id]?.color}
                   position={{ left: dev.left, top: dev.top }}
                 />
               ))}
 
-              {/* EnvironmentalStats - Dữ liệu API */}
-              <EnvironmentalStats
-                position={{ top: "93%", left: "14.5%" }}
-                data={{
-                  temp: statsData.rawSensors.t5,
-                  hum: statsData.rawSensors.h5,
-                  setTemp: statsData.rawSensors.sett5,
-                  setHum: statsData.rawSensors.seth5,
-                  tLabel: "T5",
-                  hLabel: "H5",
-                  fanStatus: "RUN",
-                  heaterStatus: "OFF",
-                }}
-                onOpenEdit={handleOpenEnvEdit}
-              />
-              <EnvironmentalStats
-                position={{ top: "93%", left: "30.5%" }}
-                data={{
-                  temp: statsData.rawSensors.t4,
-                  hum: statsData.rawSensors.h4,
-                  setTemp: statsData.rawSensors.sett4,
-                  setHum: statsData.rawSensors.seth4,
-                  tLabel: "T4",
-                  hLabel: "H4",
-                  fanStatus: "RUN",
-                  heaterStatus: "OFF",
-                }}
-                onOpenEdit={handleOpenEnvEdit}
-              />
-              <EnvironmentalStats
-                position={{ top: "93%", left: "48.5%" }}
-                data={{
-                  temp: statsData.rawSensors.t3,
-                  hum: statsData.rawSensors.h3,
-                  setTemp: statsData.rawSensors.sett3,
-                  setHum: statsData.rawSensors.seth3,
-                  tLabel: "T3",
-                  hLabel: "H3",
-                  fanStatus: "RUN",
-                  heaterStatus: "OFF",
-                }}
-                onOpenEdit={handleOpenEnvEdit}
-              />
-              <EnvironmentalStats
-                position={{ top: "93%", left: "66.5%" }}
-                data={{
-                  temp: statsData.rawSensors.t2,
-                  hum: statsData.rawSensors.h2,
-                  setTemp: statsData.rawSensors.sett2,
-                  setHum: statsData.rawSensors.seth2,
-                  tLabel: "T2",
-                  hLabel: "H2",
-                  fanStatus: "RUN",
-                  heaterStatus: "OFF",
-                }}
-                onOpenEdit={handleOpenEnvEdit}
-              />
-              <EnvironmentalStats
-                position={{ top: "93%", left: "82.5%" }}
-                data={{
-                  temp: statsData.rawSensors.t1,
-                  hum: statsData.rawSensors.h1,
-                  setTemp: statsData.rawSensors.sett1,
-                  setHum: statsData.rawSensors.seth1,
-                  tLabel: "T1",
-                  hLabel: "H1",
-                  fanStatus: "RUN",
-                  heaterStatus: "OFF",
-                }}
-                onOpenEdit={handleOpenEnvEdit}
-              />
+              {[5, 4, 3, 2, 1].map((num, idx) => {
+                const leftPositions = [
+                  "14.5%",
+                  "30.5%",
+                  "48.5%",
+                  "66.5%",
+                  "82.5%",
+                ];
+                return (
+                  <EnvironmentalStats
+                    key={num}
+                    position={{ top: "93%", left: leftPositions[idx] }}
+                    data={{
+                      temp: statsData.rawSensors[`t${num}`],
+                      hum: statsData.rawSensors[`h${num}`],
+                      setTemp: statsData.rawSensors[`sett${num}`],
+                      setHum: statsData.rawSensors[`seth${num}`],
+                      tLabel: `T${num}`,
+                      hLabel: `H${num}`,
+                      fanStatus: "RUN",
+                      heaterStatus: "OFF",
+                    }}
+                    onOpenEdit={handleOpenEnvEdit}
+                  />
+                );
+              })}
 
               <RotatingFan x={134} y={428} size={35} isRunning={false} />
               <RotatingFan x={251.5} y={428} size={35} isRunning={true} />
@@ -366,7 +331,6 @@ export default function ScadaPage() {
             </div>
           </div>
 
-          {/* Cột phải: Xuống dưới trên mobile */}
           <div className="lg:col-span-3 flex flex-col gap-6">
             <div className="bg-gray-50 border-t-4 border-blue-600 p-4 shadow-md border border-gray-200">
               <h2 className="text-blue-700 font-black text-xs mb-4 border-b border-blue-100 pb-1 uppercase italic tracking-widest">
@@ -384,7 +348,6 @@ export default function ScadaPage() {
                 ))}
               </div>
             </div>
-
             <div className="bg-gray-50 border-t-4 border-orange-500 p-4 shadow-md border border-gray-200">
               <h2 className="text-orange-700 font-black text-xs mb-4 border-b border-orange-100 pb-1 uppercase italic tracking-widest">
                 IDU Cooling Stats
