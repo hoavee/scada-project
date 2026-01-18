@@ -214,7 +214,7 @@ export default function ScadaPage() {
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
-        timer = setTimeout(fetchData, 300000);
+        timer = setTimeout(fetchData, 60000);
       }
     };
     fetchData();
