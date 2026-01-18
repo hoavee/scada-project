@@ -143,13 +143,73 @@ export default function ScadaPage() {
             seth5: data.setH5,
           },
         });
-        setDeviceStatus((prev) => ({
-          ...prev,
-          pump3: {
-            status: data.runpump3 === 1 ? "RUN" : "STOP",
-            color: data.runpump3 === 1 ? "bg-blue-500" : "bg-red-600",
+        setDeviceStatus({
+          // 1. Nhóm Valve chính
+          mvalve1: {
+            status: data.valvesCT?.valvect1?.state || "CLOSE",
+            color:
+              data.valvesCT?.valvect1?.open === 1
+                ? "bg-green-800"
+                : "bg-red-600",
           },
-        }));
+          mvalve2: {
+            status: data.valvesCT?.valvect2?.state || "CLOSE",
+            color:
+              data.valvesCT?.valvect2?.open === 1
+                ? "bg-green-800"
+                : "bg-red-600",
+          },
+          // 2. Nhóm Fan CT
+          fan1: {
+            status: data.fanCT?.fanct1?.run === 1 ? "RUN" : "STOP",
+            color:
+              data.fanCT?.fanct1?.run === 1 ? "bg-green-800" : "bg-red-600",
+          },
+          fan2: {
+            status: data.fanCT?.fanct2?.run === 1 ? "RUN" : "STOP",
+            color:
+              data.fanCT?.fanct2?.run === 1 ? "bg-green-800" : "bg-red-600",
+          },
+          // 3. Nhóm PUMP
+          pump1: {
+            status: data.pumps?.pump1?.state || "STOP",
+            color: data.pumps?.pump1?.run === 1 ? "bg-green-800" : "bg-red-600",
+          },
+          pump2: {
+            status: data.pumps?.pump2?.state || "STOP",
+            color: data.pumps?.pump2?.run === 1 ? "bg-green-800" : "bg-red-600",
+          },
+          pump3: {
+            status: data.pumps?.pump3?.state || "STOP",
+            color: data.pumps?.pump3?.run === 1 ? "bg-green-800" : "bg-red-600",
+          },
+          // Nhóm VALVE IDU
+          idu1: {
+            status: data.valves?.valve1?.state || "CLOSE",
+            color:
+              data.valves?.valve1?.value === 1 ? "bg-green-800" : "bg-red-600",
+          },
+          idu2: {
+            status: data.valves?.valve2?.state || "CLOSE",
+            color:
+              data.valves?.valve2?.value === 1 ? "bg-green-800" : "bg-red-600",
+          },
+          idu3: {
+            status: data.valves?.valve3?.state || "CLOSE",
+            color:
+              data.valves?.valve3?.value === 1 ? "bg-green-800" : "bg-red-600",
+          },
+          idu4: {
+            status: data.valves?.valve4?.state || "CLOSE",
+            color:
+              data.valves?.valve4?.value === 1 ? "bg-green-800" : "bg-red-600",
+          },
+          idu5: {
+            status: data.valves?.valve5?.state || "CLOSE",
+            color:
+              data.valves?.valve5?.value === 1 ? "bg-green-800" : "bg-red-600",
+          },
+        });
         setApiTimestamp(data.timestamp);
       } catch (error) {
         console.error("Fetch error:", error);
@@ -323,11 +383,37 @@ export default function ScadaPage() {
                 );
               })}
 
-              <RotatingFan x={134} y={428} size={35} isRunning={false} />
-              <RotatingFan x={251.5} y={428} size={35} isRunning={true} />
-              <RotatingFan x={393.5} y={428} size={35} isRunning={true} />
-              <RotatingFan x={535} y={428} size={35} isRunning={true} />
-              <RotatingFan x={653.5} y={428} size={35} isRunning={true} />
+              {/* Vị trí quạt tương ứng với các IDU 5 -> 1 */}
+              <RotatingFan
+                x={134}
+                y={428}
+                size={35}
+                isRunning={deviceStatus.idu5?.status === "OPEN"}
+              />
+              <RotatingFan
+                x={251.5}
+                y={428}
+                size={35}
+                isRunning={deviceStatus.idu4?.status === "OPEN"}
+              />
+              <RotatingFan
+                x={393.5}
+                y={428}
+                size={35}
+                isRunning={deviceStatus.idu3?.status === "OPEN"}
+              />
+              <RotatingFan
+                x={535}
+                y={428}
+                size={35}
+                isRunning={deviceStatus.idu2?.status === "OPEN"}
+              />
+              <RotatingFan
+                x={653.5}
+                y={428}
+                size={35}
+                isRunning={deviceStatus.idu1?.status === "OPEN"}
+              />
             </div>
           </div>
 
