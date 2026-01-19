@@ -247,7 +247,7 @@ export default function ScadaPage() {
 
   // 2. Cập nhật hàm handleUpdate
   const handleUpdate = async () => {
-    setIsUpdating(true); // Bắt đầu trạng thái loading
+    setIsUpdating(true);
 
     try {
       const iduNumber = editModal.label.replace(/^\D+/g, "");
@@ -257,7 +257,6 @@ export default function ScadaPage() {
         const newTemp = document.getElementById("modal-temp").value;
         const newHum = document.getElementById("modal-hum").value;
 
-        // Chỉ gửi API nếu giá trị nhập khác với giá trị SET hiện tại
         if (parseFloat(newTemp) !== parseFloat(editModal.tempValue)) {
           const val = Math.round(parseFloat(newTemp) * 100);
           promises.push(
@@ -280,23 +279,55 @@ export default function ScadaPage() {
           );
         }
       } else {
-        // Xử lý cho StatRow bình thường
+        // XỬ LÝ CHO STATROW BÌNH THƯỜNG
         const newValue = document.getElementById("modal-input").value;
         if (parseFloat(newValue) !== parseFloat(editModal.value)) {
-          promises.push(
-            fetch(`/api-proxy/api/post/config`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                label: editModal.label,
-                value: Math.round(parseFloat(newValue) * 100),
-              }),
-            })
-          );
+          // KIỂM TRA NẾU LÀ NHÃN "Temp. set pump"
+          if (editModal.label === "Temp. set pump") {
+            promises.push(
+              fetch(`/api-proxy/api/post/setpump`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  temp: Math.round(parseFloat(newValue) * 10),
+                }),
+              })
+            );
+          } else if (editModal.label === "Temp. set fan") {
+            promises.push(
+              fetch(`/api-proxy/api/post/setfan`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  temp: Math.round(parseFloat(newValue) * 10),
+                }),
+              })
+            );
+          } else if (editModal.label === "HYS Temp Set") {
+            promises.push(
+              fetch(`/api-proxy/api/post/tempset`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  temp: Math.round(parseFloat(newValue) * 100),
+                }),
+              })
+            );
+          } else if (editModal.label === "HYS HUM Set") {
+            promises.push(
+              fetch(`/api-proxy/api/post/humset`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  temp: Math.round(parseFloat(newValue) * 100),
+                }),
+              })
+            );
+          }
         }
       }
 
-      // Luôn chờ 3 giây giả lập dù có gửi API hay không
+      // Giả lập trễ 3 giây theo yêu cầu code cũ của bạn
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
       alert("Cập nhật thông số thành công!");
@@ -305,7 +336,7 @@ export default function ScadaPage() {
       console.error("Update failed:", error);
       alert("Có lỗi xảy ra khi cập nhật!");
     } finally {
-      setIsUpdating(false); // Quan trọng: Tắt loading để không bị treo nút
+      setIsUpdating(false);
     }
   };
 
