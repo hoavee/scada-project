@@ -214,7 +214,7 @@ export default function ScadaPage() {
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
-        timer = setTimeout(fetchData, 60000);
+        timer = setTimeout(fetchData, 1000);
       }
     };
     fetchData();
@@ -242,20 +242,71 @@ export default function ScadaPage() {
   const handleCloseEdit = () =>
     setEditModal({ ...editModal, isVisible: false });
 
-  const handleUpdate = () => {
-    const inputElement = document.getElementById("modal-input");
-    if (!inputElement) return;
-    const newValue = inputElement.value;
-    const updateArray = (arr) =>
-      arr.map((item) =>
-        item.label === editModal.label ? { ...item, value: newValue } : item
-      );
-    setStatsData((prev) => ({
-      ...prev,
-      waterCooling: updateArray(prev.waterCooling),
-      iduCooling: updateArray(prev.iduCooling),
-    }));
-    handleCloseEdit();
+  // 1. Thêm state này vào trong component ScadaPage
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // 2. Cập nhật hàm handleUpdate
+  const handleUpdate = async () => {
+    setIsUpdating(true); // Bắt đầu trạng thái loading
+
+    try {
+      const iduNumber = editModal.label.replace(/^\D+/g, "");
+      const promises = [];
+
+      if (editModal.mode === "environmental") {
+        const newTemp = document.getElementById("modal-temp").value;
+        const newHum = document.getElementById("modal-hum").value;
+
+        // Chỉ gửi API nếu giá trị nhập khác với giá trị SET hiện tại
+        if (parseFloat(newTemp) !== parseFloat(editModal.tempValue)) {
+          const val = Math.round(parseFloat(newTemp) * 100);
+          promises.push(
+            fetch(`/api-proxy/api/post/T${iduNumber}-IDU${iduNumber}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ temp: val }),
+            })
+          );
+        }
+
+        if (parseFloat(newHum) !== parseFloat(editModal.humValue)) {
+          const val = Math.round(parseFloat(newHum) * 100);
+          promises.push(
+            fetch(`/api-proxy/api/post/H${iduNumber}-IDU${iduNumber}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ hum: val }),
+            })
+          );
+        }
+      } else {
+        // Xử lý cho StatRow bình thường
+        const newValue = document.getElementById("modal-input").value;
+        if (parseFloat(newValue) !== parseFloat(editModal.value)) {
+          promises.push(
+            fetch(`/api-proxy/api/post/config`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                label: editModal.label,
+                value: Math.round(parseFloat(newValue) * 100),
+              }),
+            })
+          );
+        }
+      }
+
+      // Luôn chờ 3 giây giả lập dù có gửi API hay không
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      alert("Cập nhật thông số thành công!");
+      handleCloseEdit();
+    } catch (error) {
+      console.error("Update failed:", error);
+      alert("Có lỗi xảy ra khi cập nhật!");
+    } finally {
+      setIsUpdating(false); // Quan trọng: Tắt loading để không bị treo nút
+    }
   };
 
   return (
@@ -315,13 +366,19 @@ export default function ScadaPage() {
               <div className="flex gap-2">
                 <button
                   onClick={handleUpdate}
-                  className="flex-1 bg-green-600 text-white text-[10px] font-bold py-2"
+                  disabled={isUpdating}
+                  className={`flex-1 text-white text-[10px] font-bold py-2 transition-all ${
+                    isUpdating
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700"
+                  }`}
                 >
-                  UPDATE
+                  {isUpdating ? "UPDATING..." : "UPDATE"}
                 </button>
                 <button
                   onClick={handleCloseEdit}
-                  className="flex-1 bg-gray-200 text-[10px] font-bold py-2"
+                  disabled={isUpdating}
+                  className="flex-1 bg-gray-200 text-[10px] font-bold py-2 hover:bg-gray-300"
                 >
                   CANCEL
                 </button>

@@ -48,7 +48,7 @@ const EnvironmentalStats = ({
               className="bg-yellow-50 px-1 py-1 text-right font-bold cursor-pointer hover:bg-blue-100 transition-colors"
               onClick={() =>
                 onOpenEdit(
-                  `Set Temperature ${data.tLabel}`,
+                  `Set Environment ${data.tLabel}`,
                   data.setTemp,
                   data.setHum
                 )
@@ -69,7 +69,7 @@ const EnvironmentalStats = ({
               className="bg-yellow-50 px-1 py-1 text-right font-bold cursor-pointer hover:bg-blue-100 transition-colors"
               onClick={() =>
                 onOpenEdit(
-                  `Set Humidity ${data.hLabel}`,
+                  `Set Environment ${data.hLabel}`,
                   data.setTemp,
                   data.setHum
                 )
