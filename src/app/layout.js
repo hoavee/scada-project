@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Lock, // Icon cho phần login
+  Gauge,
 } from "lucide-react";
 import "./globals.css";
 
@@ -172,6 +173,7 @@ export default function RootLayout({ children }) {
             <NavItem href="/scada" icon={LayoutDashboard} label="SCADA" />
             <NavItem href="/power-meter" icon={Zap} label="Power" />
             <NavItem href="/power-consume" icon={BarChart3} label="Energy" />
+            <NavItem href="/gas-compressor" icon={Gauge} label="Gas Comp" />
 
             <div className="h-[1px] bg-blue-400/20 my-4 mx-3"></div>
 
