@@ -21,8 +21,8 @@ import "./globals.css";
 const AuthContext = createContext();
 
 const ADMIN_CREDENTIALS = {
-  username: "admin",
-  password: "admin123123", // Thay đổi mật khẩu tại đây
+  username: process.env.NEXT_PUBLIC_ADMIN_USERNAME,
+  password: process.env.NEXT_PUBLIC_ADMIN_PASSWORD,
 };
 
 export default function RootLayout({ children }) {
