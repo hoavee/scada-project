@@ -4,7 +4,7 @@
 @source "../../node_modules/@tremor/react";
 
 :root {
-  --background: #7b0f0f;
+  --background: #c7c3c3;
   --foreground: #171717;
 }
 
@@ -17,7 +17,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #da1515;
+    --background: #ffffff;
     --foreground: #ededed;
   }
 }

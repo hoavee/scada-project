@@ -275,7 +275,7 @@ export default function ScadaPage() {
             fetch(`/api-proxy/api/post/H${iduNumber}-IDU${iduNumber}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ hum: val }),
+              body: JSON.stringify({ temp: val }),
             })
           );
         }

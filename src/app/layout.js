@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -11,27 +11,69 @@ import {
   Settings,
   HelpCircle,
   Activity,
-  Menu, // Thêm icon Menu cho nút hamburger
-  X, // Thêm icon X để đóng sidebar
+  Menu,
+  X,
+  Lock, // Icon cho phần login
 } from "lucide-react";
 import "./globals.css";
 
+// --- LOGIC XÁC THỰC CƠ BẢN ---
+const AuthContext = createContext();
+
+const ADMIN_CREDENTIALS = {
+  username: "admin",
+  password: "admin123123", // Thay đổi mật khẩu tại đây
+};
+
 export default function RootLayout({ children }) {
   const [currentTime, setCurrentTime] = useState("");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State quản lý đóng mở sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Thông tin đăng nhập demo
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
   const pathname = usePathname();
 
   useEffect(() => {
+    const authStatus = localStorage.getItem("isLoggedIn");
+    if (authStatus === "true") setIsAuthenticated(true);
+    setIsLoading(false);
+
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleString("en-GB"));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Đóng sidebar tự động khi chuyển trang trên mobile
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [pathname]);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+
+    // So sánh với thông tin Admin đã khai báo
+    if (
+      username === ADMIN_CREDENTIALS.username &&
+      password === ADMIN_CREDENTIALS.password
+    ) {
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userRole", "admin"); // Lưu thêm vai trò nếu cần
+      setIsAuthenticated(true);
+      setError("");
+    } else {
+      setError("Sai tài khoản hoặc mật khẩu");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsAuthenticated(false);
+  };
 
   const NavItem = ({ href, icon: Icon, label }) => {
     const active = pathname === href;
@@ -53,10 +95,54 @@ export default function RootLayout({ children }) {
     );
   };
 
+  // Giao diện Login (Giữ phong cách tối giản của hệ thống)
+  if (!isAuthenticated && !isLoading) {
+    return (
+      <html lang="en">
+        <body className="flex min-h-screen bg-[#f0f2f5] items-center justify-center font-sans p-4">
+          <div className="w-full max-w-sm bg-white border border-gray-300 shadow-sm p-8">
+            <div className="text-center mb-6">
+              <h1 className="font-black text-gray-700 uppercase italic text-lg tracking-tighter">
+                Central <span className="text-blue-600">Management</span> System
+              </h1>
+              <p className="text-[10px] font-bold text-gray-400 uppercase mt-2 tracking-widest">
+                Login Required
+              </p>
+            </div>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Username"
+                className="w-full p-2 text-sm border border-gray-300 outline-none focus:border-blue-500 placeholder-gray-700 placeholder:opacity-100 text-gray-700" // Thêm placeholder-gray-500 và opacity-100
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                className="w-full p-2 text-sm border border-gray-300 outline-none focus:border-blue-500 placeholder-gray-700 placeholder:opacity-100 text-gray-700" // Thêm placeholder-gray-500 và opacity-100
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              {error && (
+                <p className="text-[9px] text-red-500 font-bold uppercase">
+                  {error}
+                </p>
+              )}
+              <button className="w-full bg-[#3b5998] text-white py-2 text-xs font-bold uppercase tracking-widest hover:bg-[#2a3f6d]">
+                Access System
+              </button>
+            </form>
+          </div>
+        </body>
+      </html>
+    );
+  }
+
+  // Giao diện Main (Giữ nguyên 100% cấu trúc HTML/CSS của bạn)
   return (
     <html lang="en">
       <body className="flex min-h-screen bg-[#f0f2f5] font-sans">
-        {/* LỚP PHỦ (OVERLAY) - Chỉ hiện trên mobile khi sidebar mở */}
         {isSidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-[55] lg:hidden"
@@ -64,7 +150,6 @@ export default function RootLayout({ children }) {
           />
         )}
 
-        {/* SIDEBAR */}
         <aside
           className={`
           fixed lg:relative inset-y-0 left-0 w-20 bg-[#3b5998] flex flex-col shadow-2xl z-[120] transition-transform duration-300
@@ -114,11 +199,9 @@ export default function RootLayout({ children }) {
           </div>
         </aside>
 
-        {/* PHẦN NỘI DUNG CHÍNH */}
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 h-14 bg-white border-b border-gray-300 flex items-center justify-between px-4 lg:px-6 shadow-sm z-[110]">
             <div className="flex items-center gap-3">
-              {/* NÚT HAMBURGER - Đã tối ưu màu sắc và độ đậm */}
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className="lg:hidden p-2 hover:bg-blue-50 rounded-md transition-all active:scale-95 z-[120]"
@@ -137,8 +220,6 @@ export default function RootLayout({ children }) {
 
             <div className="flex items-center gap-4 text-right">
               <div className="hidden sm:block">
-                {" "}
-                {/* Ẩn text status trên màn hình quá nhỏ */}
                 <p className="text-[9px] font-bold text-gray-400 uppercase leading-none tracking-wider">
                   System Status: OK
                 </p>
@@ -146,7 +227,11 @@ export default function RootLayout({ children }) {
                   {currentTime}
                 </p>
               </div>
-              <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-sm">
+              <div
+                onClick={handleLogout}
+                className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-sm cursor-pointer hover:bg-red-50 transition-colors"
+                title="Click to Logout"
+              >
                 👤
               </div>
             </div>
