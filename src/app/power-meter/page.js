@@ -69,8 +69,8 @@ export default function PowerMeterPage() {
 
     const fetchData = async () => {
       try {
-        // Sử dụng cache: "no-store" giống page.js bạn cung cấp
-        const response = await fetch("http://113.164.80.153:8000/api/pw", {
+        // Thay đổi URL để chạy qua rewrite proxy trong next.config.mjs
+        const response = await fetch("/api-proxy/api/pw", {
           cache: "no-store",
         });
 
@@ -109,21 +109,21 @@ export default function PowerMeterPage() {
         });
 
         setMetersData(formattedData);
-        // Nếu API có trường timestamp như trang kia, bạn có thể lưu lại
         if (result.timestamp) setApiTimestamp(result.timestamp);
 
         setLoading(false);
       } catch (error) {
         console.error("Fetch error:", error);
+        // Tắt loading kể cả khi lỗi để tránh treo màn hình loading mãi mãi
+        setLoading(false);
       } finally {
-        // Đệ quy setTimeout 1000ms (1 giây) giống hệt cơ chế trang SCADA bạn gửi
-        timer = setTimeout(fetchData, 60000);
+        // Đệ quy setTimeout 60s
+        timer = setTimeout(fetchData, 1000);
       }
     };
 
     fetchData();
 
-    // Cleanup khi component unmount
     return () => clearTimeout(timer);
   }, []);
 
@@ -159,6 +159,16 @@ export default function PowerMeterPage() {
                 ● {metersData.length} METERS ONLINE
               </span>
             </div>
+            {apiTimestamp && (
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-gray-500 uppercase">
+                  Last Update
+                </span>
+                <span className="text-[12px] font-black text-blue-900">
+                  {apiTimestamp}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
