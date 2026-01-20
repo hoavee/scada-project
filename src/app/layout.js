@@ -15,6 +15,7 @@ import {
   X,
   Lock, // Icon cho phần login
   Gauge,
+  TriangleAlert,
 } from "lucide-react";
 import "./globals.css";
 
@@ -174,6 +175,7 @@ export default function RootLayout({ children }) {
             <NavItem href="/power-meter" icon={Zap} label="Power" />
             <NavItem href="/power-consume" icon={BarChart3} label="Energy" />
             <NavItem href="/gas-compressor" icon={Gauge} label="Gas Comp" />
+            <NavItem href="/alarm-report" icon={TriangleAlert} label="Alarm" />
 
             <div className="h-[1px] bg-blue-400/20 my-4 mx-3"></div>
 
