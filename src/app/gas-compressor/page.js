@@ -187,7 +187,7 @@ export default function GasCompressor() {
           {/* Main Scada Map */}
           <div className="lg:col-span-8 border border-gray-300 bg-[#fdfdfd] relative overflow-auto">
             <div
-              className="relative w-full mx-auto min-w-[900px]"
+              className="relative w-full mx-auto min-w-[600px]"
               style={{ aspectRatio: "770 / 550" }}
             >
               <img
