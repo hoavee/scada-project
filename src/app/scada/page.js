@@ -209,6 +209,27 @@ export default function ScadaPage() {
             color:
               data.valves?.valve5?.value === 1 ? "bg-green-800" : "bg-red-600",
           },
+          // Cập nhật Nhóm Fan IDU từ cấu trúc dữ liệu mới
+          fanidu1: {
+            status: data.fan?.fanidu1?.state || "STOP",
+            isRunning: data.fan?.fanidu1?.run === 1,
+          },
+          fanidu2: {
+            status: data.fan?.fanidu2?.state || "STOP",
+            isRunning: data.fan?.fanidu2?.run === 1,
+          },
+          fanidu3: {
+            status: data.fan?.fanidu3?.state || "STOP",
+            isRunning: data.fan?.fanidu3?.run === 1,
+          },
+          fanidu4: {
+            status: data.fan?.fanidu4?.state || "STOP",
+            isRunning: data.fan?.fanidu4?.run === 1,
+          },
+          fanidu5: {
+            status: data.fan?.fanidu5?.state || "STOP",
+            isRunning: data.fan?.fanidu5?.run === 1,
+          },
         });
         setApiTimestamp(data.timestamp);
       } catch (error) {
@@ -476,31 +497,31 @@ export default function ScadaPage() {
                 x={134}
                 y={428}
                 size={35}
-                isRunning={deviceStatus.idu5?.status === "OPEN"}
+                isRunning={deviceStatus.fanidu5?.isRunning}
               />
               <RotatingFan
                 x={251.5}
                 y={428}
                 size={35}
-                isRunning={deviceStatus.idu4?.status === "OPEN"}
+                isRunning={deviceStatus.fanidu4?.isRunning}
               />
               <RotatingFan
                 x={393.5}
                 y={428}
                 size={35}
-                isRunning={deviceStatus.idu3?.status === "OPEN"}
+                isRunning={deviceStatus.fanidu3?.isRunning}
               />
               <RotatingFan
                 x={535}
                 y={428}
                 size={35}
-                isRunning={deviceStatus.idu2?.status === "OPEN"}
+                isRunning={deviceStatus.fanidu2?.isRunning}
               />
               <RotatingFan
                 x={653.5}
                 y={428}
                 size={35}
-                isRunning={deviceStatus.idu1?.status === "OPEN"}
+                isRunning={deviceStatus.fanidu1?.isRunning}
               />
             </div>
           </div>
