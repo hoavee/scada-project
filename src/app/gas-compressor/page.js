@@ -185,10 +185,10 @@ export default function GasCompressor() {
 
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 pb-20">
           {/* Main Scada Map */}
-          <div className="lg:col-span-9 border border-gray-300 bg-[#fdfdfd] relative overflow-auto">
+          <div className="lg:col-span-8 border border-gray-300 bg-[#fdfdfd] relative overflow-auto">
             <div
-              className="relative w-full mx-auto min-w-[1180px]"
-              style={{ aspectRatio: "770 / 530" }}
+              className="relative w-full mx-auto min-w-[900px]"
+              style={{ aspectRatio: "770 / 550" }}
             >
               <img
                 ref={imgRef}
@@ -210,7 +210,7 @@ export default function GasCompressor() {
           </div>
 
           {/* CỘT BÊN PHẢI - ĐÃ GỘP THÀNH 1 BẢNG */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             <div className="bg-gray-50 border-t-4 border-blue-600 p-4 shadow-md border border-gray-200">
               <h2 className="text-blue-700 font-black text-xs mb-4 border-b border-blue-100 pb-1 uppercase italic tracking-widest">
                 GAS COMPRESSOR STATS
