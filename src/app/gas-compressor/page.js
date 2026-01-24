@@ -41,27 +41,26 @@ export default function GasCompressor() {
 
   const [apiTimestamp, setApiTimestamp] = useState("");
 
-  // SỬA LỖI TẠI ĐÂY: Khởi tạo gasCompressorStats ngay từ đầu
   const [statsData, setStatsData] = useState({
     gasCompressorStats: [
-      { label: "GAS FB Pressure", value: "0.69", unit: "Bar" },
-      { label: "Pressure Set", value: "0.35", unit: "Bar" },
-      { label: "HYS P. Inc", value: "0.10", unit: "Bar" },
-      { label: "Time P .Inc", value: "0.96", unit: "Sec" },
-      { label: "HYS P. Dec", value: "0.05", unit: "Bar" },
-      { label: "Time P .Inc ", value: "0.16", unit: "Sec" },
-      { label: "Changer Time", value: "5.12", unit: "H" },
-      { label: "Delay SYS LP", value: "7.68", unit: "S" },
-      { label: "Restart enable", value: "8.64", unit: "S" },
-      { label: "Delay Oil tank Low", value: "0.96", unit: "S" },
-      { label: "Bypass Valve time", value: "0.05", unit: "S" },
-      { label: "EVP Valve Max P", value: "0.80", unit: "Bar" },
+      { label: "GAS FB Pressure", value: "0.00", unit: "Bar" },
+      { label: "Pressure Set", value: "0.00", unit: "Bar" },
+      { label: "HYS P. Inc", value: "0.00", unit: "Bar" },
+      { label: "Time P .Inc", value: "0.00", unit: "Sec" },
+      { label: "HYS P. Dec", value: "0.00", unit: "Bar" },
+      { label: "Time P .Inc ", value: "0.00", unit: "Sec" },
+      { label: "Changer Time", value: "0.00", unit: "H" },
+      { label: "Delay SYS LP", value: "0.00", unit: "S" },
+      { label: "Restart enable", value: "0.00", unit: "S" },
+      { label: "Delay Oil tank Low", value: "0.00", unit: "S" },
+      { label: "Bypass Valve time", value: "0.00", unit: "S" },
+      { label: "EVP Valve Max P", value: "0.00", unit: "Bar" },
     ],
     rawSensors: {},
   });
 
   const [deviceStatus, setDeviceStatus] = useState(
-    INITIAL_GAS_COMPRESSOR_STATUS
+    INITIAL_GAS_COMPRESSOR_STATUS,
   );
 
   useEffect(() => {
@@ -71,40 +70,77 @@ export default function GasCompressor() {
     let timer;
     const fetchData = async () => {
       try {
-        const response = await fetch("/api-proxy/api/test", {
+        // Cập nhật URL API mới
+        const response = await fetch("http://113.164.80.153:8000/api/test", {
           cache: "no-store",
         });
         if (!response.ok) throw new Error("API Offline");
         const data = await response.json();
 
-        // Cập nhật statsData khi có dữ liệu từ API (giữ cấu trúc mới)
+        // Ánh xạ chính xác các key từ API (dựa trên ảnh) vào statsData
         setStatsData((prev) => ({
           ...prev,
           gasCompressorStats: [
             {
               label: "GAS FB Pressure",
-              value: data.gas_press || "0.69",
+              value: data.gasfbpressure ?? "0.00",
               unit: "Bar",
             },
-            { label: "Pressure Set", value: data.p_set || "0.35", unit: "Bar" },
-            { label: "HYS P. Inc", value: "0.10", unit: "Bar" },
-            { label: "Time P .Inc", value: "0.96", unit: "Sec" },
-            { label: "HYS P. Dec", value: "0.05", unit: "Bar" },
-            { label: "Time P .Inc ", value: "0.16", unit: "Sec" },
-            { label: "Changer Time", value: "5.12", unit: "H" },
-            { label: "Delay SYS LP", value: "7.68", unit: "S" },
-            { label: "Restart enable", value: "8.64", unit: "S" },
-            { label: "Delay Oil tank Low", value: "0.96", unit: "S" },
-            { label: "Bypass Valve time", value: "0.05", unit: "S" },
-            { label: "EVP Valve Max P", value: "0.80", unit: "Bar" },
+            {
+              label: "Pressure Set",
+              value: data.pressureset ?? "0.00",
+              unit: "Bar",
+            },
+            { label: "HYS P. Inc", value: data.hyspinc ?? "0.00", unit: "Bar" },
+            {
+              label: "Time P .Inc",
+              value: data.timepinc ?? "0.00",
+              unit: "Sec",
+            },
+            { label: "HYS P. Dec", value: data.hyspdec ?? "0.00", unit: "Bar" },
+            {
+              label: "Time P .Inc ",
+              value: data.timedec ?? "0.00",
+              unit: "Sec",
+            },
+            {
+              label: "Changer Time",
+              value: data.changertime ?? "0.00",
+              unit: "H",
+            },
+            {
+              label: "Delay SYS LP",
+              value: data.delaysyslp ?? "0.00",
+              unit: "S",
+            },
+            {
+              label: "Restart enable",
+              value: data.restartenable ?? "0.00",
+              unit: "S",
+            },
+            {
+              label: "Delay Oil tank Low",
+              value: data.delayoiltanklow ?? "0.00",
+              unit: "S",
+            },
+            {
+              label: "Bypass Valve time",
+              value: data.bypassvalvetime ?? "0.00",
+              unit: "S",
+            },
+            {
+              label: "EVP Valve Max P",
+              value: data.evpvalvemaxp ?? "0.00",
+              unit: "Bar",
+            },
           ],
         }));
 
-        setApiTimestamp(data.timestamp);
+        if (data.timestamp) setApiTimestamp(data.timestamp);
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
-        timer = setTimeout(fetchData, 600000);
+        timer = setTimeout(fetchData, 1000);
       }
     };
     fetchData();
@@ -127,7 +163,6 @@ export default function GasCompressor() {
     setIsUpdating(true);
     try {
       const newValue = document.getElementById("modal-input").value;
-      // Gửi API update dựa trên label ở đây (tương tự code cũ của bạn)
       await new Promise((resolve) => setTimeout(resolve, 1000));
       alert("Cập nhật thành công!");
       handleCloseEdit();
@@ -209,14 +244,13 @@ export default function GasCompressor() {
             </div>
           </div>
 
-          {/* CỘT BÊN PHẢI - ĐÃ GỘP THÀNH 1 BẢNG */}
+          {/* CỘT BÊN PHẢI */}
           <div className="lg:col-span-4">
             <div className="bg-gray-50 border-t-4 border-blue-600 p-4 shadow-md border border-gray-200">
               <h2 className="text-blue-700 font-black text-xs mb-4 border-b border-blue-100 pb-1 uppercase italic tracking-widest">
                 GAS COMPRESSOR STATS
               </h2>
               <div className="space-y-1">
-                {/* Kiểm tra an toàn trước khi map */}
                 {statsData.gasCompressorStats &&
                   statsData.gasCompressorStats.map((item, idx) => (
                     <StatRow

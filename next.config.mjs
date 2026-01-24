@@ -1,12 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone", // Luôn giữ dòng này để tối ưu RAM 2GB
   reactCompiler: true,
   async rewrites() {
     return [
       {
-        // Khi gọi /api-proxy/..., Next.js sẽ tự hiểu là gọi đến IP 113.164.80.153
         source: "/api-proxy/:path*",
-        destination: "http://113.164.80.153:8000/:path*",
+        // Sử dụng biến môi trường SCADA_API_URL
+        destination: `${process.env.SCADA_API_URL}/:path*`,
       },
     ];
   },

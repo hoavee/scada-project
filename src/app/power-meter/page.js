@@ -118,7 +118,7 @@ export default function PowerMeterPage() {
         setLoading(false);
       } finally {
         // Đệ quy setTimeout 60s
-        timer = setTimeout(fetchData, 600000);
+        timer = setTimeout(fetchData, 1000);
       }
     };
 

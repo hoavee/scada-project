@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import RotatingFan from "../components/RotatingFan";
 import SystemLabel from "../components/SystemLabel";
 import EnvironmentalStats from "../components/EnvironmentalStats";
+import TrendPopup from "../components/TrendPopup";
 import { DEVICES_CONFIG, INITIAL_DEVICE_STATUS } from "../constants/devices";
 
 // Giữ nguyên StatRow như cũ
@@ -38,6 +39,11 @@ export default function ScadaPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const imgRef = useRef(null); // Sử dụng ref để kiểm tra trạng thái ảnh thực tế
+  const [trendModal, setTrendModal] = useState({ isOpen: false, label: "" });
+
+  const handleOpenTrend = (label) => {
+    setTrendModal({ isOpen: true, label });
+  };
 
   const [apiTimestamp, setApiTimestamp] = useState("2026-01-12 21:15:37");
   const [statsData, setStatsData] = useState({
@@ -235,7 +241,7 @@ export default function ScadaPage() {
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
-        timer = setTimeout(fetchData, 600000);
+        timer = setTimeout(fetchData, 1000);
       }
     };
     fetchData();
@@ -285,7 +291,7 @@ export default function ScadaPage() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ temp: val }),
-            })
+            }),
           );
         }
 
@@ -296,7 +302,7 @@ export default function ScadaPage() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ temp: val }),
-            })
+            }),
           );
         }
       } else {
@@ -312,7 +318,7 @@ export default function ScadaPage() {
                 body: JSON.stringify({
                   temp: Math.round(parseFloat(newValue) * 10),
                 }),
-              })
+              }),
             );
           } else if (editModal.label === "Temp. set fan") {
             promises.push(
@@ -322,7 +328,7 @@ export default function ScadaPage() {
                 body: JSON.stringify({
                   temp: Math.round(parseFloat(newValue) * 10),
                 }),
-              })
+              }),
             );
           } else if (editModal.label === "HYS Temp Set") {
             promises.push(
@@ -332,7 +338,7 @@ export default function ScadaPage() {
                 body: JSON.stringify({
                   temp: Math.round(parseFloat(newValue) * 100),
                 }),
-              })
+              }),
             );
           } else if (editModal.label === "HYS HUM Set") {
             promises.push(
@@ -342,7 +348,7 @@ export default function ScadaPage() {
                 body: JSON.stringify({
                   temp: Math.round(parseFloat(newValue) * 100),
                 }),
-              })
+              }),
             );
           }
         }
@@ -439,6 +445,14 @@ export default function ScadaPage() {
           </div>
         )}
 
+        {/* Hiển thị Popup khi state isOpen = true */}
+        {trendModal.isOpen && (
+          <TrendPopup
+            label={trendModal.label}
+            onClose={() => setTrendModal({ isOpen: false, label: "" })}
+          />
+        )}
+
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 pb-20">
           <div className="lg:col-span-9 border border-gray-300 bg-[#fdfdfd] relative overflow-auto">
             <div
@@ -488,6 +502,7 @@ export default function ScadaPage() {
                       heaterStatus: "OFF",
                     }}
                     onOpenEdit={handleOpenEnvEdit}
+                    onOpenTrend={handleOpenTrend}
                   />
                 );
               })}

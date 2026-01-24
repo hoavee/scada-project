@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-// Import Recharts thay thế cho Tremor
 import {
   BarChart,
   Bar,
@@ -10,54 +9,29 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
 } from "recharts";
-import { ArrowLeft, Zap, Activity, ShieldCheck, Calendar } from "lucide-react";
-import Link from "next/link";
+import { Zap, Calendar } from "lucide-react";
 
-// --- HELPER: TẠO DUMMY DATA ---
-const generateDummyData = () => {
-  const data = [];
-  const today = new Date();
-
-  for (let i = 40; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(today.getDate() - i);
-    const dateStr = date.toISOString().split("T")[0];
-
-    data.push({
-      date: dateStr,
-      "MUL-CHILLER": Math.floor(Math.random() * (3500 - 2500) + 2500),
-      "MUL-DEHUM1": Math.floor(Math.random() * (1500 - 1000) + 1000),
-      "MUL-DEHUM2": Math.floor(Math.random() * (5500 - 4000) + 4000),
-      "MUL-VC1": Math.floor(Math.random() * (1000 - 700) + 700),
-      "MUL-VC2": Math.floor(Math.random() * (1200 - 800) + 800),
-      "MUL-HVAC": Math.floor(Math.random() * (3200 - 2000) + 2000),
-      "MUL-LIGHTING": Math.floor(Math.random() * (900 - 700) + 700),
-      "POWER METER 8": Math.floor(Math.random() * (5500 - 4800) + 4800),
-    });
-  }
-  return data;
+// Ánh xạ ID từ API sang nhãn hiển thị theo thứ tự ảnh: Trái -> Phải, Trên -> Dưới
+const METER_MAP = {
+  PM1: "MUL-VC1",
+  PM2: "MUL-VC2",
+  PM3: "MUL-CHILLER",
+  PM4: "MUL-DEHUM1",
+  PM5: "MUL-DEHUM2",
+  PM6: "MUL-LIGHTING",
+  PM7: "MUL-HVAC",
+  PM8: "MAIN POWER METER",
 };
 
-const allMeters = [
-  "MUL-CHILLER",
-  "MUL-DEHUM1",
-  "MUL-DEHUM2",
-  "MUL-VC1",
-  "MUL-VC2",
-  "MUL-HVAC",
-  "MUL-LIGHTING",
-  "POWER METER 8",
-];
+const allMeters = Object.values(METER_MAP);
 
-// Recharts Custom Tooltip (Dựa trên thiết kế cũ của bạn)
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-xl ring-1 ring-black/5 z-50">
       <p className="text-[11px] font-black text-gray-500 uppercase border-b border-gray-100 pb-1 mb-2">
-        Date: {label}
+        Time: {label}
       </p>
       <div className="space-y-1">
         {payload.map((category, idx) => (
@@ -68,11 +42,11 @@ const CustomTooltip = ({ active, payload, label }) => {
                 style={{ backgroundColor: "#1d4ed8" }}
               />
               <span className="text-[10px] font-bold text-gray-600 uppercase italic">
-                {category.dataKey || category.name}:
+                {category.dataKey}:
               </span>
             </div>
             <span className="font-mono font-bold text-gray-800 text-[11px]">
-              {category.value.toLocaleString()} kWh
+              {Math.abs(category.value).toLocaleString()} kWh
             </span>
           </div>
         ))}
@@ -84,44 +58,101 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function PowerConsumePage() {
   const [isMounted, setIsMounted] = useState(false);
   const [selectedMeters, setSelectedMeters] = useState(["MUL-DEHUM2"]);
+  const [chartData, setChartData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
-  const chartData = useMemo(() => generateDummyData(), []);
-
-  const [dateRange, setDateRange] = useState({
-    start: "",
-    end: "",
-  });
+  const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    setDateRange({
-      start: sevenDaysAgo.toISOString().split("T")[0],
-      end: today,
-    });
+    const today = formatLocalDate(new Date());
+    setDateRange({ start: today, end: today });
     setIsMounted(true);
   }, []);
+
+  const fetchData = async () => {
+    if (!dateRange.start || !dateRange.end) return;
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `http://113.164.80.153:8000/api/database?from=${dateRange.start}&to=${dateRange.end}`,
+      );
+      const rawData = await response.json();
+      const isSingleDay = dateRange.start === dateRange.end;
+      let processedData = [];
+
+      if (isSingleDay) {
+        const firstKey = Object.keys(rawData)[0];
+        if (rawData[firstKey]) {
+          processedData = rawData[firstKey].map((item, index) => ({
+            date: `${item.start.substring(0, 5)} - ${item.end.substring(0, 5)}`,
+            ...Object.keys(METER_MAP).reduce((acc, pmKey) => {
+              acc[METER_MAP[pmKey]] = Math.abs(
+                rawData[pmKey][index]?.energy || 0,
+              );
+              return acc;
+            }, {}),
+          }));
+        }
+      } else {
+        const dailyMap = {};
+        Object.keys(rawData).forEach((pmKey) => {
+          const meterName = METER_MAP[pmKey];
+          rawData[pmKey].forEach((item) => {
+            const apiDatePart = item.date.split("T")[0];
+            const [y, m, d] = apiDatePart.split("-");
+            const vnFormat = `${d}/${m}/${y}`;
+            if (!dailyMap[vnFormat])
+              dailyMap[vnFormat] = { date: vnFormat, rawDate: apiDatePart };
+            if (!dailyMap[vnFormat][meterName])
+              dailyMap[vnFormat][meterName] = 0;
+            dailyMap[vnFormat][meterName] += Math.abs(item.energy);
+          });
+        });
+        processedData = Object.values(dailyMap).sort((a, b) =>
+          a.rawDate.localeCompare(b.rawDate),
+        );
+      }
+      setChartData(processedData);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isMounted) fetchData();
+  }, [dateRange, isMounted]);
+
+  const peakInfo = useMemo(() => {
+    if (chartData.length === 0) return { value: 0, time: "N/A" };
+    const meter = selectedMeters[0];
+    let maxVal = -1;
+    let maxTime = "";
+
+    chartData.forEach((d) => {
+      if (d[meter] > maxVal) {
+        maxVal = d[meter];
+        maxTime = d.date;
+      }
+    });
+    return { value: maxVal, time: maxTime };
+  }, [chartData, selectedMeters]);
 
   const setQuickRange = (days) => {
     const end = new Date();
     const start = new Date();
     start.setDate(end.getDate() - days);
-
-    setDateRange({
-      start: start.toISOString().split("T")[0],
-      end: end.toISOString().split("T")[0],
-    });
+    setDateRange({ start: formatLocalDate(start), end: formatLocalDate(end) });
   };
 
-  const filteredData = chartData.filter((item) => {
-    return item.date >= dateRange.start && item.date <= dateRange.end;
-  });
-
-  const toggleMeter = (meter) => {
-    setSelectedMeters([meter]);
-  };
+  const toggleMeter = (meter) => setSelectedMeters([meter]);
 
   if (!isMounted) return <div className="min-h-screen bg-gray-100" />;
 
@@ -138,7 +169,6 @@ export default function PowerConsumePage() {
                   Range
                 </span>
               </div>
-
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex flex-col">
                   <label className="text-[8px] font-black uppercase text-gray-400 mb-1">
@@ -171,81 +201,45 @@ export default function PowerConsumePage() {
                 </div>
               </div>
             </div>
-
             <div className="flex gap-2">
+              <button
+                onClick={() => setQuickRange(0)}
+                className="flex-1 bg-gray-800 text-white text-[9px] font-black uppercase py-1.5 hover:bg-blue-700 transition-colors border-b-2 border-blue-400"
+              >
+                Today
+              </button>
               <button
                 onClick={() => setQuickRange(7)}
                 className="flex-1 bg-gray-800 text-white text-[9px] font-black uppercase py-1.5 hover:bg-blue-700 transition-colors border-b-2 border-blue-400"
               >
                 Last 7 Days
               </button>
-              <button
-                onClick={() => setQuickRange(30)}
-                className="flex-1 bg-gray-800 text-white text-[9px] font-black uppercase py-1.5 hover:bg-blue-700 transition-colors border-b-2 border-blue-400"
-              >
-                Last 30 Days
-              </button>
             </div>
-          </div>
-
-          <div className="bg-gray-900 px-4 py-2 border-r-4 border-green-500 shadow-lg text-right">
-            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
-              Est. Monthly Cost
-            </p>
-            <p className="text-xl font-mono text-[#ffff00] leading-none">
-              $14,502.20
-            </p>
           </div>
         </div>
 
-        {/* KPI GRID (Thay thế Grid & Card của Tremor bằng Div) */}
+        {/* KPI GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* Card 1 */}
           <div className="bg-white p-6 border-t-4 border-emerald-500 ring-2 ring-gray-100 shadow-md rounded-sm">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-[11px] font-black uppercase text-gray-500">
-                  Total Month Usage
-                </p>
-                <p className="text-2xl font-black italic text-gray-800">
-                  12,450 <span className="text-sm">kWh</span>
-                </p>
-              </div>
-              <span className="px-2 py-1 text-xs font-bold rounded bg-emerald-100 text-emerald-700">
-                +12.5%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 h-1.5 mt-6 rounded-full overflow-hidden">
-              <div className="bg-emerald-500 h-full w-[83%] shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-            </div>
-          </div>
-
-          {/* Card 2 */}
-          <div className="bg-white p-6 border-t-4 border-blue-500 ring-2 ring-gray-100 shadow-md rounded-sm">
             <p className="text-[11px] font-black uppercase text-gray-500">
-              Efficiency Index
+              Total Usage
             </p>
-            <p className="text-2xl font-black italic text-blue-700">
-              94.2 <span className="text-sm">%</span>
+            <p className="text-2xl font-black italic text-gray-800">
+              {chartData
+                .reduce((acc, curr) => acc + (curr[selectedMeters[0]] || 0), 0)
+                .toFixed(1)}{" "}
+              <span className="text-sm">kWh</span>
             </p>
-            <div className="mt-4 border-t border-gray-50 pt-2 flex items-center">
-              <ShieldCheck size={14} className="text-blue-500" />
-              <span className="text-[10px] font-bold text-blue-500 uppercase ml-2">
-                System Optimized
-              </span>
-            </div>
           </div>
-
-          {/* Card 3 */}
           <div className="bg-white p-6 border-t-4 border-orange-500 ring-2 ring-gray-100 shadow-md rounded-sm">
             <p className="text-[11px] font-black uppercase text-gray-500">
-              Peak Power Demand
+              Peak Consumption
             </p>
             <p className="text-2xl font-black italic text-orange-600">
-              84.5 <span className="text-sm">kW</span>
+              {peakInfo.value.toFixed(1)} <span className="text-sm">kWh</span>
             </p>
             <p className="text-[10px] mt-4 font-bold text-gray-400 uppercase italic">
-              Last Peak: Today, 14:05 PM
+              at {peakInfo.time}
             </p>
           </div>
         </div>
@@ -255,9 +249,8 @@ export default function PowerConsumePage() {
           <div className="bg-gray-800 p-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 className="text-white text-xs font-black uppercase tracking-[0.15em] flex items-center gap-2">
               <Zap size={16} className="text-[#ffff00]" /> Load Profile
-              Analytics
+              Analytics {loading && "..."}
             </h2>
-
             <div className="flex flex-wrap justify-center gap-2">
               {allMeters.map((meter) => (
                 <button
@@ -270,11 +263,7 @@ export default function PowerConsumePage() {
                   }`}
                 >
                   <div
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      selectedMeters.includes(meter)
-                        ? "bg-blue-500"
-                        : "bg-gray-600"
-                    }`}
+                    className={`w-1.5 h-1.5 rounded-full ${selectedMeters.includes(meter) ? "bg-blue-500" : "bg-gray-600"}`}
                   />
                   {meter}
                 </button>
@@ -282,12 +271,12 @@ export default function PowerConsumePage() {
             </div>
           </div>
 
-          <div className="p-6 h-[450px]">
-            {filteredData.length > 0 ? (
+          <div className="p-4 sm:p-6 h-[400px] sm:h-[450px]">
+            {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={filteredData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  data={chartData}
+                  margin={{ top: 10, right: 0, left: -25, bottom: 0 }} // Giảm margin left để chiếm không gian trống
                 >
                   <CartesianGrid
                     vertical={false}
@@ -296,19 +285,20 @@ export default function PowerConsumePage() {
                   />
                   <XAxis
                     dataKey="date"
-                    fontSize={10}
+                    fontSize={9}
                     fontWeight="bold"
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: "#9ca3af" }}
+                    minTickGap={10} // Tránh chồng chéo chữ trên mobile
                   />
                   <YAxis
-                    fontSize={10}
+                    fontSize={9}
                     fontWeight="bold"
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: "#9ca3af" }}
-                    tickFormatter={(value) => `${value.toLocaleString()}`}
+                    width={60} // Cố định độ rộng trục Y
                   />
                   <Tooltip content={<CustomTooltip />} />
                   {selectedMeters.map((meter) => (
@@ -316,27 +306,16 @@ export default function PowerConsumePage() {
                       key={meter}
                       dataKey={meter}
                       fill="#185acb"
-                      radius={[4, 4, 0, 0]}
+                      radius={[2, 2, 0, 0]}
                     />
                   ))}
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center border-2 border-dashed border-gray-200 text-gray-400 italic text-sm text-center">
-                No data available for the period:
-                <br />
-                {dateRange.start} to {dateRange.end}
+                {loading ? "Loading data..." : `No data available`}
               </div>
             )}
-          </div>
-
-          <div className="bg-gray-50 border-t border-gray-100 p-4 flex justify-between items-center italic">
-            <div className="text-[9px] font-mono text-gray-400 uppercase tracking-widest">
-              Data Source: Power_Meter_Gateway_v4 // Sync: 100%
-            </div>
-            <button className="text-[10px] font-black text-green-700 hover:underline uppercase tracking-widest">
-              Generate Report
-            </button>
           </div>
         </div>
       </div>
