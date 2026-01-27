@@ -54,6 +54,7 @@ export default function ScadaPage() {
       { label: "Time HYS pump", value: "0.00", unit: "Min" },
       { label: "Temp. set fan", value: "0.00", unit: "C" },
       { label: "HYS Temp fan", value: "0.00", unit: "C" },
+      { label: "Time HYS fan", value: "0.00", unit: "Min" },
       { label: "Changer Time", value: "0.00", unit: "H" },
       { label: "Delay FS Alarm", value: "0.00", unit: "S" },
     ],
@@ -106,6 +107,7 @@ export default function ScadaPage() {
             { label: "Time HYS pump", value: data.timeHysPump, unit: "Min" },
             { label: "Temp. set fan", value: data.tempSetFan, unit: "C" },
             { label: "HYS Temp fan", value: data.hysTempFan, unit: "C" },
+            { label: "Time HYS fan", value: data.timeHysFan, unit: "Min" },
             { label: "Changer Time", value: data.changerTime, unit: "H" },
             { label: "Delay FS Alarm", value: data.delayFsAlarm, unit: "S" },
           ],
@@ -189,6 +191,12 @@ export default function ScadaPage() {
             status: data.pumps?.pump3?.state || "STOP",
             color: data.pumps?.pump3?.run === 1 ? "bg-green-800" : "bg-red-600",
           },
+
+          watertemp: {
+            status: `${data.waterTemp}°C`, // Lấy giá trị từ data.waterTemp của API
+            color: "bg-blue-600", // Màu nền cho label (ví dụ màu xanh nước biển)
+          },
+
           // Nhóm VALVE IDU
           idu1: {
             status: data.valves?.valve1?.state || "CLOSE",
@@ -560,7 +568,7 @@ export default function ScadaPage() {
             </div>
             <div className="bg-gray-50 border-t-4 border-orange-500 p-4 shadow-md border border-gray-200">
               <h2 className="text-orange-700 font-black text-xs mb-4 border-b border-orange-100 pb-1 uppercase italic tracking-widest">
-                IDU Cooling Stats
+                ROOM IDU COOLING
               </h2>
               <div className="space-y-1">
                 {statsData.iduCooling.map((item, idx) => (

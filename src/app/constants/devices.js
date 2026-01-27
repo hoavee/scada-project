@@ -141,6 +141,14 @@ export const DEVICES_CONFIG = [
     isStacked: false,
     labelSize: "12px",
   },
+  {
+    id: "watertemp",
+    label: "Water",
+    left: "29%",
+    top: "33.5%",
+    isStacked: true,
+    labelSize: "14px",
+  },
 ];
 
 // 2. Trạng thái mặc định ban đầu
@@ -158,4 +166,5 @@ export const INITIAL_DEVICE_STATUS = {
   pump2: { status: "RUN", color: "bg-green-800" },
   pump3: { status: "STOP", color: "bg-red-600" },
   compressor: { status: null, color: "" },
+  watertemp: { status: "22", color: "bg-blue-600" },
 };

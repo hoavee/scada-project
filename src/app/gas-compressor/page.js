@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import SystemLabel from "../components/SystemLabel";
+import LedLight from "../components/LedLight"; // Import component LedLight
 import {
   GAS_COMPRESSOR_CONFIG,
   INITIAL_GAS_COMPRESSOR_STATUS,
@@ -63,6 +64,12 @@ export default function GasCompressor() {
     INITIAL_GAS_COMPRESSOR_STATUS,
   );
 
+  const [ledStatus, setLedStatus] = useState({
+    ledcomp1: { led1: 0, led2: 0 },
+    ledcomp2: { led1: 0, led2: 0 },
+    ledcomp3: { led1: 0, led2: 0 },
+  });
+
   useEffect(() => {
     setIsMounted(true);
     if (imgRef.current && imgRef.current.complete) setIsImageLoaded(true);
@@ -71,13 +78,13 @@ export default function GasCompressor() {
     const fetchData = async () => {
       try {
         // Cập nhật URL API mới
-        const response = await fetch("http://113.164.80.153:8000/api/test", {
+        const response = await fetch("/api-proxy/api/test", {
           cache: "no-store",
         });
         if (!response.ok) throw new Error("API Offline");
         const data = await response.json();
 
-        // Ánh xạ chính xác các key từ API (dựa trên ảnh) vào statsData
+        // Ánh xạ chính xác các key từ API vào statsData
         setStatsData((prev) => ({
           ...prev,
           gasCompressorStats: [
@@ -100,7 +107,7 @@ export default function GasCompressor() {
             { label: "HYS P. Dec", value: data.hyspdec ?? "0.00", unit: "Bar" },
             {
               label: "Time P .Inc ",
-              value: data.timedec ?? "0.00",
+              value: data.timepdec ?? "0.00",
               unit: "Sec",
             },
             {
@@ -135,6 +142,121 @@ export default function GasCompressor() {
             },
           ],
         }));
+
+        // 2. CẬP NHẬT TRẠNG THÁI GAS RL TỪ API
+        if (data.gasrl) {
+          setDeviceStatus((prevStatus) => {
+            const updatedStatus = { ...prevStatus };
+
+            // Duyệt qua các key gasrl1, gasrl2, gasrl3 từ API
+            Object.keys(data.gasrl).forEach((key) => {
+              const deviceApiData = data.gasrl[key]; // Dữ liệu từ API
+              const stateValue = deviceApiData.state; // Lấy chuỗi "READY", "LP", hoặc "HP"
+
+              let color = "bg-gray-500"; // Màu mặc định nếu không khớp
+
+              // Giữ nguyên logic màu sắc từ INITIAL_GAS_COMPRESSOR_STATUS
+              if (stateValue === "READY") {
+                color = "bg-blue-600";
+              } else if (stateValue === "LP") {
+                color = "bg-red-600";
+              } else if (stateValue === "HP") {
+                color = "bg-yellow-500";
+              }
+
+              updatedStatus[key] = {
+                status: stateValue,
+                color: color,
+              };
+            });
+
+            return updatedStatus;
+          });
+        }
+
+        // 3. CẬP NHẬT TRẠNG THÁI OIL VALVES (oilv)
+        if (data.oilv) {
+          setDeviceStatus((prevStatus) => {
+            const updatedStatus = { ...prevStatus };
+            Object.keys(data.oilv).forEach((key) => {
+              const stateValue = data.oilv[key].state;
+              updatedStatus[key] = {
+                status: stateValue,
+                color: stateValue === "OPEN" ? "bg-green-800" : "bg-red-600",
+              };
+            });
+            return updatedStatus;
+          });
+        }
+
+        // 4. CẬP NHẬT TRẠNG THÁI OIL FLOW SWITCH (oilfs)
+        if (data.oilfs) {
+          setDeviceStatus((prevStatus) => {
+            const updatedStatus = { ...prevStatus };
+            Object.keys(data.oilfs).forEach((key) => {
+              const stateValue = data.oilfs[key].state;
+              let color = "bg-gray-500";
+
+              if (stateValue === "RUN") color = "bg-green-800";
+              else if (stateValue === "FAULT") color = "bg-red-600";
+              else if (stateValue === "STOP") color = "bg-red-600";
+
+              updatedStatus[key] = {
+                status: stateValue,
+                color: color,
+              };
+            });
+            return updatedStatus;
+          });
+        }
+
+        // 5. CẬP NHẬT TRẠNG THÁI LED (ledcomp)
+        if (data.ledcomp) {
+          setLedStatus({
+            ledcomp1: data.ledcomp.ledcomp1 || { led1: 0, led2: 0 },
+            ledcomp2: data.ledcomp.ledcomp2 || { led1: 0, led2: 0 },
+            ledcomp3: data.ledcomp.ledcomp3 || { led1: 0, led2: 0 },
+          });
+        }
+
+        // 6. CẬP NHẬT TRẠNG THÁI COMPLOAD (comp1, comp2, comp3)
+        if (data.compload) {
+          setDeviceStatus((prevStatus) => {
+            const updatedStatus = { ...prevStatus };
+
+            Object.keys(data.compload).forEach((key) => {
+              const loadData = data.compload[key]; // Dữ liệu từ API
+              const deviceId = key.replace("compload", "comp"); // Map key sang comp1, comp2, comp3
+
+              let displayStatus = "";
+              let color = "";
+
+              // Logic kiểm tra trạng thái ưu tiên
+              if (loadData.fault === 1) {
+                displayStatus = "FAULT";
+                color = "bg-yellow-500";
+              } else if (loadData.run === 1) {
+                // Chỉ thêm (%) khi đang RUN
+                displayStatus = `RUN (${loadData.state || "0%"})`;
+                color = "bg-green-800";
+              } else if (loadData.stop === 1) {
+                displayStatus = "STOP";
+                color = "bg-red-600";
+              } else {
+                // Nếu tất cả là 0 (hoặc UNKNOWN), hiển thị STOP với màu xám/cam tùy chọn
+                displayStatus = "STOP";
+                color = "bg-red-600";
+              }
+
+              updatedStatus[deviceId] = {
+                status: displayStatus,
+                color: color,
+              };
+            });
+
+            return updatedStatus;
+          });
+        }
 
         if (data.timestamp) setApiTimestamp(data.timestamp);
       } catch (error) {
@@ -232,6 +354,67 @@ export default function GasCompressor() {
                 className="absolute inset-0 w-full h-full object-fill"
                 onLoad={() => setIsImageLoaded(true)}
               />
+
+              {/* Tích hợp LedLight vào hệ tọa độ 770x550 */}
+              {isMounted && (
+                <>
+                  {/* Ledcomp 1 */}
+                  <LedLight
+                    x={273.5}
+                    y={243}
+                    color="#228B22"
+                    isOn={ledStatus.ledcomp1.led1 === 1}
+                    isBlinking={ledStatus.ledcomp1.led1 === 1}
+                    size={15}
+                  />
+                  <LedLight
+                    x={322}
+                    y={242}
+                    color="#228B22"
+                    isOn={ledStatus.ledcomp1.led2 === 1}
+                    isBlinking={ledStatus.ledcomp1.led2 === 1}
+                    size={15}
+                  />
+
+                  {/* Ledcomp 2 */}
+                  <LedLight
+                    x={441}
+                    y={240.5}
+                    color="#228B22"
+                    isOn={ledStatus.ledcomp2.led1 === 1}
+                    isBlinking={ledStatus.ledcomp2.led1 === 1}
+                    size={15}
+                  />
+                  <LedLight
+                    x={492.5}
+                    y={242}
+                    color="#228B22"
+                    isOn={ledStatus.ledcomp2.led2 === 1}
+                    isBlinking={ledStatus.ledcomp2.led2 === 1}
+                    size={15}
+                  />
+
+                  {/* Ledcomp 3 */}
+                  <LedLight
+                    x={609}
+                    y={245.5}
+                    color="#228B22"
+                    isOn={ledStatus.ledcomp3.led1 === 1}
+                    isBlinking={ledStatus.ledcomp3.led1 === 1}
+                    size={15}
+                  />
+                  <LedLight
+                    x={661}
+                    y={244.5}
+                    color="#228B22"
+                    isOn={ledStatus.ledcomp3.led2 === 1}
+                    isBlinking={ledStatus.ledcomp3.led2 === 1}
+                    size={15}
+                  />
+                </>
+              )}
+
+              {/* Các component Labels và Fans hiện có */}
               {GAS_COMPRESSOR_CONFIG.map((dev) => (
                 <SystemLabel
                   key={dev.id}

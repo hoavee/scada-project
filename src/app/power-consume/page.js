@@ -10,9 +10,11 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { Zap, Calendar } from "lucide-react";
+import { Zap, Calendar, FileDown } from "lucide-react";
+// Import thư viện xuất Excel
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
-// Ánh xạ ID từ API sang nhãn hiển thị theo thứ tự ảnh: Trái -> Phải, Trên -> Dưới
 const METER_MAP = {
   PM1: "MUL-VC1",
   PM2: "MUL-VC2",
@@ -69,8 +71,16 @@ export default function PowerConsumePage() {
     return `${year}-${month}-${day}`;
   };
 
+  const getSmartToday = () => {
+    const now = new Date();
+    if (now.getHours() < 6) {
+      now.setDate(now.getDate() - 1);
+    }
+    return formatLocalDate(now);
+  };
+
   useEffect(() => {
-    const today = formatLocalDate(new Date());
+    const today = getSmartToday();
     setDateRange({ start: today, end: today });
     setIsMounted(true);
   }, []);
@@ -79,45 +89,74 @@ export default function PowerConsumePage() {
     if (!dateRange.start || !dateRange.end) return;
     setLoading(true);
     try {
+      const endDateObj = new Date(dateRange.end);
+      endDateObj.setDate(endDateObj.getDate() + 1);
+      const extendedEnd = formatLocalDate(endDateObj);
+
       const response = await fetch(
-        `http://113.164.80.153:8000/api/database?from=${dateRange.start}&to=${dateRange.end}`,
+        `/api-proxy/api/database?from=${dateRange.start}&to=${extendedEnd}`,
       );
       const rawData = await response.json();
-      const isSingleDay = dateRange.start === dateRange.end;
-      let processedData = [];
 
+      const isSingleDay = dateRange.start === dateRange.end;
+      const dailyMap = {};
+
+      Object.keys(rawData).forEach((pmKey) => {
+        const meterName = METER_MAP[pmKey];
+        rawData[pmKey].forEach((item) => {
+          const endHour = parseInt(item.end.split(":")[0]);
+          const apiDatePart = item.date.split("T")[0];
+          let reportDate = new Date(apiDatePart);
+
+          if (endHour > 0 && endHour <= 6) {
+            reportDate.setDate(reportDate.getDate() - 1);
+          }
+
+          const workingDayKey = formatLocalDate(reportDate);
+          const vnFormat = workingDayKey.split("-").reverse().join("/");
+
+          if (!dailyMap[workingDayKey]) {
+            dailyMap[workingDayKey] = {
+              date: vnFormat,
+              rawDate: workingDayKey,
+              hourlyRows: {},
+            };
+          }
+
+          if (!dailyMap[workingDayKey][meterName])
+            dailyMap[workingDayKey][meterName] = 0;
+          dailyMap[workingDayKey][meterName] += Math.abs(item.energy || 0);
+
+          const timeLabel = `${item.start.substring(0, 5)} - ${item.end.substring(0, 5)}`;
+          if (!dailyMap[workingDayKey].hourlyRows[timeLabel]) {
+            dailyMap[workingDayKey].hourlyRows[timeLabel] = {
+              date: timeLabel,
+              hourVal: endHour === 0 ? 24 : endHour,
+            };
+          }
+          dailyMap[workingDayKey].hourlyRows[timeLabel][meterName] = Math.abs(
+            item.energy || 0,
+          );
+        });
+      });
+
+      let processedData = [];
       if (isSingleDay) {
-        const firstKey = Object.keys(rawData)[0];
-        if (rawData[firstKey]) {
-          processedData = rawData[firstKey].map((item, index) => ({
-            date: `${item.start.substring(0, 5)} - ${item.end.substring(0, 5)}`,
-            ...Object.keys(METER_MAP).reduce((acc, pmKey) => {
-              acc[METER_MAP[pmKey]] = Math.abs(
-                rawData[pmKey][index]?.energy || 0,
-              );
-              return acc;
-            }, {}),
-          }));
+        const targetDay = dailyMap[dateRange.start];
+        if (targetDay) {
+          processedData = Object.values(targetDay.hourlyRows).sort((a, b) => {
+            const sortHour = (h) => (h <= 6 ? h + 24 : h);
+            return sortHour(a.hourVal) - sortHour(b.hourVal);
+          });
         }
       } else {
-        const dailyMap = {};
-        Object.keys(rawData).forEach((pmKey) => {
-          const meterName = METER_MAP[pmKey];
-          rawData[pmKey].forEach((item) => {
-            const apiDatePart = item.date.split("T")[0];
-            const [y, m, d] = apiDatePart.split("-");
-            const vnFormat = `${d}/${m}/${y}`;
-            if (!dailyMap[vnFormat])
-              dailyMap[vnFormat] = { date: vnFormat, rawDate: apiDatePart };
-            if (!dailyMap[vnFormat][meterName])
-              dailyMap[vnFormat][meterName] = 0;
-            dailyMap[vnFormat][meterName] += Math.abs(item.energy);
-          });
-        });
-        processedData = Object.values(dailyMap).sort((a, b) =>
-          a.rawDate.localeCompare(b.rawDate),
-        );
+        processedData = Object.values(dailyMap)
+          .filter(
+            (d) => d.rawDate >= dateRange.start && d.rawDate <= dateRange.end,
+          )
+          .sort((a, b) => a.rawDate.localeCompare(b.rawDate));
       }
+
       setChartData(processedData);
     } catch (error) {
       console.error("Fetch error:", error);
@@ -137,30 +176,67 @@ export default function PowerConsumePage() {
     let maxTime = "";
 
     chartData.forEach((d) => {
-      if (d[meter] > maxVal) {
-        maxVal = d[meter];
+      const val = d[meter] || 0;
+      if (val > maxVal) {
+        maxVal = val;
         maxTime = d.date;
       }
     });
     return { value: maxVal, time: maxTime };
   }, [chartData, selectedMeters]);
 
-  const setQuickRange = (days) => {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(end.getDate() - days);
-    setDateRange({ start: formatLocalDate(start), end: formatLocalDate(end) });
+  const setQuickRange = (type) => {
+    if (type === "today") {
+      const smartToday = getSmartToday();
+      setDateRange({ start: smartToday, end: smartToday });
+    } else if (type === "thisMonth") {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      setDateRange({
+        start: formatLocalDate(firstDay),
+        end: formatLocalDate(today),
+      });
+    }
   };
 
-  const toggleMeter = (meter) => setSelectedMeters([meter]);
+  // Logic Generate Report
+  const generateExcel = async () => {
+    if (chartData.length === 0) return;
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Power Consumption");
+
+    const columns = [
+      { header: "Time / Date", key: "date", width: 20 },
+      ...allMeters.map((meter) => ({
+        header: `${meter} (kWh)`,
+        key: meter,
+        width: 20,
+      })),
+    ];
+    worksheet.columns = columns;
+
+    worksheet.getRow(1).font = { bold: true };
+
+    chartData.forEach((row) => {
+      worksheet.addRow(row);
+    });
+
+    const fileName =
+      dateRange.start === dateRange.end
+        ? `Power_Report_${dateRange.start}.xlsx`
+        : `Power_Report_${dateRange.start}_to_${dateRange.end}.xlsx`;
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), fileName);
+  };
 
   if (!isMounted) return <div className="min-h-screen bg-gray-100" />;
 
   return (
     <main className="p-4 sm:p-8 bg-[#e5e7eb] min-h-screen font-sans select-none">
-      <div className="max-w-7xl mx-auto bg-white border-2 border-gray-300 shadow-[10px_10px_0px_0px_rgba(0,0,0,0.05)] p-6">
-        {/* HEADER */}
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-8 border-b-4 border-gray-800 pb-6 gap-6">
+      <div className="max-w-8xl mx-auto bg-white border-2 border-gray-300 shadow-[10px_10px_0px_0px_rgba(0,0,0,0.05)] p-6">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between pb-6 gap-6">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-4 bg-white border-2 border-gray-800 p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
               <div className="flex items-center gap-2 border-r-2 border-gray-100 pr-4">
@@ -177,11 +253,9 @@ export default function PowerConsumePage() {
                   <input
                     type="date"
                     value={dateRange.start}
+                    onClick={(e) => e.target.showPicker()}
                     onChange={(e) =>
-                      setDateRange((prev) => ({
-                        ...prev,
-                        start: e.target.value,
-                      }))
+                      setDateRange((p) => ({ ...p, start: e.target.value }))
                     }
                     className="text-xs font-mono font-bold bg-transparent outline-none cursor-pointer text-gray-800"
                   />
@@ -193,8 +267,9 @@ export default function PowerConsumePage() {
                   <input
                     type="date"
                     value={dateRange.end}
+                    onClick={(e) => e.target.showPicker()}
                     onChange={(e) =>
-                      setDateRange((prev) => ({ ...prev, end: e.target.value }))
+                      setDateRange((p) => ({ ...p, end: e.target.value }))
                     }
                     className="text-xs font-mono font-bold bg-transparent outline-none cursor-pointer text-gray-800"
                   />
@@ -203,22 +278,28 @@ export default function PowerConsumePage() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setQuickRange(0)}
+                onClick={() => setQuickRange("today")}
                 className="flex-1 bg-gray-800 text-white text-[9px] font-black uppercase py-1.5 hover:bg-blue-700 transition-colors border-b-2 border-blue-400"
               >
                 Today
               </button>
               <button
-                onClick={() => setQuickRange(7)}
+                onClick={() => setQuickRange("thisMonth")}
                 className="flex-1 bg-gray-800 text-white text-[9px] font-black uppercase py-1.5 hover:bg-blue-700 transition-colors border-b-2 border-blue-400"
               >
-                Last 7 Days
+                This Month
+              </button>
+              <button
+                onClick={generateExcel}
+                className="flex-1 bg-emerald-700 text-white text-[9px] font-black uppercase py-1.5 hover:bg-emerald-800 transition-colors border-b-2 border-emerald-400 flex items-center justify-center gap-2 px-3"
+              >
+                <FileDown size={18} />
+                REPORT
               </button>
             </div>
           </div>
         </div>
 
-        {/* KPI GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <div className="bg-white p-6 border-t-4 border-emerald-500 ring-2 ring-gray-100 shadow-md rounded-sm">
             <p className="text-[11px] font-black uppercase text-gray-500">
@@ -244,7 +325,6 @@ export default function PowerConsumePage() {
           </div>
         </div>
 
-        {/* MAIN CHART CARD */}
         <div className="ring-2 ring-gray-200 overflow-hidden shadow-xl bg-white rounded-sm">
           <div className="bg-gray-800 p-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <h2 className="text-white text-xs font-black uppercase tracking-[0.15em] flex items-center gap-2">
@@ -255,10 +335,10 @@ export default function PowerConsumePage() {
               {allMeters.map((meter) => (
                 <button
                   key={meter}
-                  onClick={() => toggleMeter(meter)}
+                  onClick={() => setSelectedMeters([meter])}
                   className={`flex items-center gap-1.5 px-2 py-1 border text-[9px] font-bold uppercase transition-all ${
                     selectedMeters.includes(meter)
-                      ? `bg-gray-700 border-blue-500 text-white shadow-inner`
+                      ? `bg-gray-700 border-blue-500 text-white`
                       : "bg-gray-900 border-gray-700 text-gray-500 hover:text-gray-300"
                   }`}
                 >
@@ -276,7 +356,7 @@ export default function PowerConsumePage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={chartData}
-                  margin={{ top: 10, right: 0, left: -25, bottom: 0 }} // Giảm margin left để chiếm không gian trống
+                  margin={{ top: 10, right: 0, left: -25, bottom: 0 }}
                 >
                   <CartesianGrid
                     vertical={false}
@@ -290,7 +370,7 @@ export default function PowerConsumePage() {
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: "#9ca3af" }}
-                    minTickGap={10} // Tránh chồng chéo chữ trên mobile
+                    minTickGap={10}
                   />
                   <YAxis
                     fontSize={9}
@@ -298,7 +378,7 @@ export default function PowerConsumePage() {
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: "#9ca3af" }}
-                    width={60} // Cố định độ rộng trục Y
+                    width={60}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   {selectedMeters.map((meter) => (

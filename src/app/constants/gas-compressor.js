@@ -133,7 +133,7 @@ export const GAS_COMPRESSOR_CONFIG = [
 export const INITIAL_GAS_COMPRESSOR_STATUS = {
   comp1: { status: "STOP", color: "bg-red-600" },
   comp2: { status: "RUN", color: "bg-green-800" },
-  comp3: { status: "STOP", color: "bg-red-600" },
+  comp3: { status: "FAULT", color: "bg-yellow-500" },
   gasrl1: { status: "READY", color: "bg-blue-600" },
   gasrl2: { status: "LP", color: "bg-red-600" },
   gasrl3: { status: "HP", color: "bg-yellow-500" },
