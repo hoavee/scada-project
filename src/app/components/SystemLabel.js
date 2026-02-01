@@ -23,11 +23,11 @@ const SystemLabel = ({
       }}
     >
       <div
-        className={`flex items-center bg-white/50 px-2 py-1 rounded-sm shadow-sm 
-          ${isStacked ? "flex-col gap-1 text-center" : "flex-row gap-1.5"}`}
+        className={`flex items-center px-2 py-1 
+          ${isStacked ? "flex-col gap-0.5 text-center" : "flex-row gap-1"}`}
       >
         <h2
-          className="font-bold leading-tight text-gray-800 drop-shadow-sm break-words"
+          className="font-bold leading-tight text-gray-900 break-words pt-[1px]"
           style={{ fontSize: labelSize }}
         >
           {label}

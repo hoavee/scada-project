@@ -48,7 +48,11 @@ const CustomTooltip = ({ active, payload, label }) => {
               </span>
             </div>
             <span className="font-mono font-bold text-gray-800 text-[11px]">
-              {Math.abs(category.value).toLocaleString()} kWh
+              {category.value.toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2,
+              })}{" "}
+              kWh
             </span>
           </div>
         ))}
@@ -108,6 +112,7 @@ export default function PowerConsumePage() {
           const apiDatePart = item.date.split("T")[0];
           let reportDate = new Date(apiDatePart);
 
+          // Logic xử lý ngày làm việc (trước 6h sáng tính cho ngày hôm trước)
           if (endHour > 0 && endHour <= 6) {
             reportDate.setDate(reportDate.getDate() - 1);
           }
@@ -123,10 +128,17 @@ export default function PowerConsumePage() {
             };
           }
 
+          // --- LOGIC NHÂN DỮ LIỆU PM8 ---
+          // Nếu pmKey là PM8, nhân giá trị energy với 1,000,000
+          const multiplier = pmKey === "PM8" ? 1000000 : 1;
+          const energyValue = Math.abs(item.energy || 0) * multiplier;
+
+          // Cộng dồn vào dữ liệu tổng của ngày
           if (!dailyMap[workingDayKey][meterName])
             dailyMap[workingDayKey][meterName] = 0;
-          dailyMap[workingDayKey][meterName] += Math.abs(item.energy || 0);
+          dailyMap[workingDayKey][meterName] += energyValue;
 
+          // Xử lý dữ liệu chi tiết từng khung giờ
           const timeLabel = `${item.start.substring(0, 5)} - ${item.end.substring(0, 5)}`;
           if (!dailyMap[workingDayKey].hourlyRows[timeLabel]) {
             dailyMap[workingDayKey].hourlyRows[timeLabel] = {
@@ -134,9 +146,8 @@ export default function PowerConsumePage() {
               hourVal: endHour === 0 ? 24 : endHour,
             };
           }
-          dailyMap[workingDayKey].hourlyRows[timeLabel][meterName] = Math.abs(
-            item.energy || 0,
-          );
+          dailyMap[workingDayKey].hourlyRows[timeLabel][meterName] =
+            energyValue;
         });
       });
 
@@ -206,6 +217,7 @@ export default function PowerConsumePage() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Power Consumption");
 
+    // 1. Cấu hình các cột (Bỏ numFmt ở đây để kiểm soát động cho từng ô)
     const columns = [
       { header: "Time / Date", key: "date", width: 20 },
       ...allMeters.map((meter) => ({
@@ -216,17 +228,50 @@ export default function PowerConsumePage() {
     ];
     worksheet.columns = columns;
 
+    // 2. Định dạng dòng tiêu đề
     worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
 
+    // 3. Thêm dữ liệu và định dạng từng ô một cách thông minh
     chartData.forEach((row) => {
-      worksheet.addRow(row);
+      const newRow = worksheet.addRow(row);
+
+      newRow.eachCell((cell, colNumber) => {
+        // Chỉ xử lý các cột số (từ cột 2 trở đi)
+        if (colNumber > 1) {
+          const val = cell.value;
+
+          if (typeof val === "number") {
+            // Kiểm tra nếu là số nguyên (ví dụ: 2, 1000, 6551500)
+            if (val % 1 === 0) {
+              // Định dạng: 1,000 (Tuyệt đối không có dấu chấm ở cuối)
+              cell.numFmt = "#,##0";
+            } else {
+              // Định dạng: 1,000.## (Chỉ hiện tối đa số thập phân cần thiết)
+              // Sử dụng dấu chấm cho thập phân theo chuẩn quốc tế
+              cell.numFmt = "#,##0.00";
+            }
+
+            // Căn phải cho số để dễ nhìn
+            cell.alignment = { horizontal: "right" };
+          }
+        } else {
+          // Căn trái cho cột Time / Date
+          cell.alignment = { horizontal: "left" };
+        }
+      });
     });
 
+    // 4. Thiết lập tên file dựa trên khoảng ngày đã chọn
     const fileName =
       dateRange.start === dateRange.end
         ? `Power_Report_${dateRange.start}.xlsx`
         : `Power_Report_${dateRange.start}_to_${dateRange.end}.xlsx`;
 
+    // 5. Xuất file
     const buffer = await workbook.xlsx.writeBuffer();
     saveAs(new Blob([buffer]), fileName);
   };
@@ -308,7 +353,10 @@ export default function PowerConsumePage() {
             <p className="text-2xl font-black italic text-gray-800">
               {chartData
                 .reduce((acc, curr) => acc + (curr[selectedMeters[0]] || 0), 0)
-                .toFixed(1)}{" "}
+                .toLocaleString("en-US", {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                })}{" "}
               <span className="text-sm">kWh</span>
             </p>
           </div>
@@ -317,7 +365,11 @@ export default function PowerConsumePage() {
               Peak Consumption
             </p>
             <p className="text-2xl font-black italic text-orange-600">
-              {peakInfo.value.toFixed(1)} <span className="text-sm">kWh</span>
+              {peakInfo.value.toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2,
+              })}{" "}
+              <span className="text-sm">kWh</span>
             </p>
             <p className="text-[10px] mt-4 font-bold text-gray-400 uppercase italic">
               at {peakInfo.time}

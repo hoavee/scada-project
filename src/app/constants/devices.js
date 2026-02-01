@@ -142,6 +142,24 @@ export const DEVICES_CONFIG = [
     labelSize: "12px",
   },
   {
+    id: "waterLow",
+    label: "",
+    left: "35.5%",
+    top: "30%",
+    width: "200px",
+    isStacked: false,
+    labelSize: "12px",
+  },
+  {
+    id: "fsfault",
+    label: "",
+    left: "35%",
+    top: "36%",
+    width: "200px",
+    isStacked: false,
+    labelSize: "12px",
+  },
+  {
     id: "watertemp",
     label: "Water",
     left: "29%",
@@ -167,4 +185,6 @@ export const INITIAL_DEVICE_STATUS = {
   pump3: { status: "STOP", color: "bg-red-600" },
   compressor: { status: null, color: "" },
   watertemp: { status: "22", color: "bg-blue-600" },
+  waterLow: { status: "LOW", color: "bg-red-600" },
+  fsfault: { status: "FAULT", color: "bg-red-600" },
 };

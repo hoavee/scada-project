@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, createContext, useContext } from "react";
 import Link from "next/link";
+import { Roboto } from "next/font/google";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -13,11 +14,18 @@ import {
   Activity,
   Menu,
   X,
-  Lock, // Icon cho phần login
   Gauge,
   TriangleAlert,
 } from "lucide-react";
 import "./globals.css";
+
+// Cấu hình font Roboto với các cấu hình hỗ trợ tiếng Việt
+const roboto = Roboto({
+  weight: ["400", "500", "700", "900"],
+  subsets: ["vietnamese"], // Bắt buộc có để hiển thị đúng dấu tiếng Việt
+  display: "swap",
+  variable: "--font-roboto", // Đặt biến CSS để dùng trong Tailwind
+});
 
 // --- LOGIC XÁC THỰC CƠ BẢN ---
 const AuthContext = createContext();
@@ -33,7 +41,6 @@ export default function RootLayout({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Thông tin đăng nhập demo
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -57,14 +64,12 @@ export default function RootLayout({ children }) {
 
   const handleLogin = (e) => {
     e.preventDefault();
-
-    // So sánh với thông tin Admin đã khai báo
     if (
       username === ADMIN_CREDENTIALS.username &&
       password === ADMIN_CREDENTIALS.password
     ) {
       localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userRole", "admin"); // Lưu thêm vai trò nếu cần
+      localStorage.setItem("userRole", "admin");
       setIsAuthenticated(true);
       setError("");
     } else {
@@ -97,15 +102,16 @@ export default function RootLayout({ children }) {
     );
   };
 
-  // Giao diện Login (Giữ phong cách tối giản của hệ thống)
   if (!isAuthenticated && !isLoading) {
     return (
       <html lang="en">
-        <body className="flex min-h-screen bg-[#f0f2f5] items-center justify-center font-sans p-4">
+        <body
+          className={`${roboto.variable} flex min-h-screen bg-[#f0f2f5] items-center justify-center font-sans p-4`}
+        >
           <div className="w-full max-w-sm bg-white border border-gray-300 shadow-sm p-8">
             <div className="text-center mb-6">
-              <h1 className="font-black text-gray-700 uppercase italic text-lg tracking-tighter">
-                Central <span className="text-blue-600">Management</span> System
+              <h1 className="font-black text-gray-700 uppercase italic text-lg tracking-tighter ml-10">
+                Vĩnh Cường - BMS
               </h1>
               <p className="text-[10px] font-bold text-gray-400 uppercase mt-2 tracking-widest">
                 Login Required
@@ -115,14 +121,14 @@ export default function RootLayout({ children }) {
               <input
                 type="text"
                 placeholder="Username"
-                className="w-full p-2 text-sm border border-gray-300 outline-none focus:border-blue-500 placeholder-gray-700 placeholder:opacity-100 text-gray-700" // Thêm placeholder-gray-500 và opacity-100
+                className="w-full p-2 text-sm border border-gray-300 outline-none focus:border-blue-500 placeholder-gray-700 placeholder:opacity-100 text-gray-700"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
               <input
                 type="password"
                 placeholder="Password"
-                className="w-full p-2 text-sm border border-gray-300 outline-none focus:border-blue-500 placeholder-gray-700 placeholder:opacity-100 text-gray-700" // Thêm placeholder-gray-500 và opacity-100
+                className="w-full p-2 text-sm border border-gray-300 outline-none focus:border-blue-500 placeholder-gray-700 placeholder:opacity-100 text-gray-700"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -141,111 +147,116 @@ export default function RootLayout({ children }) {
     );
   }
 
-  // Giao diện Main (Giữ nguyên 100% cấu trúc HTML/CSS của bạn)
   return (
     <html lang="en">
-      <body className="flex min-h-screen bg-[#f0f2f5] font-sans">
-        {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 z-[55] lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-        )}
+      <body className="flex flex-col min-h-screen bg-[#f0f2f5] font-sans">
+        {/* HEADER: Chiếm trọn chiều ngang */}
+        <header className="sticky top-0 h-14 bg-white border-b border-gray-300 flex items-center justify-between px-4 lg:px-6 shadow-sm z-[130]">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="lg:hidden p-2 hover:bg-blue-50 rounded-md transition-all active:scale-95"
+            >
+              {isSidebarOpen ? (
+                <X size={26} strokeWidth={3} className="text-blue-600" />
+              ) : (
+                <Menu size={26} strokeWidth={3} className="text-blue-600" />
+              )}
+            </button>
 
-        <aside
-          className={`
-          fixed lg:relative inset-y-0 left-0 w-20 bg-[#3b5998] flex flex-col shadow-2xl z-[120] transition-transform duration-300
-          ${
-            isSidebarOpen
-              ? "translate-x-0"
-              : "-translate-x-full lg:translate-x-0"
-          }
-        `}
-        >
-          <div className="py-6 flex flex-col items-center border-b border-blue-400/30 bg-[#2a3f6d]">
-            <img
-              src="https://www.argotech.vn/img/logo.60fa6afb.svg"
-              alt="Logo"
-              className="w-12 h-auto brightness-0 invert"
-            />
-          </div>
-
-          <nav className="flex-1 mt-2">
-            <NavItem href="/scada" icon={LayoutDashboard} label="SCADA" />
-            <NavItem href="/power-meter" icon={Zap} label="Power" />
-            <NavItem href="/power-consume" icon={BarChart3} label="Energy" />
-            <NavItem href="/gas-compressor" icon={Gauge} label="Gas Comp" />
-            <NavItem href="/alarm-report" icon={TriangleAlert} label="Alarm" />
-
-            <div className="h-[1px] bg-blue-400/20 my-4 mx-3"></div>
-
-            <div className="flex flex-col gap-4 items-center opacity-60">
-              <Bell
-                size={20}
-                className="text-white cursor-pointer hover:opacity-100"
-              />
-              <Settings
-                size={20}
-                className="text-white cursor-pointer hover:opacity-100"
-              />
-              <HelpCircle
-                size={20}
-                className="text-white cursor-pointer hover:opacity-100"
-              />
-            </div>
-          </nav>
-
-          <div className="py-4 text-center">
-            <Activity
-              size={18}
-              className="text-green-400 inline-block animate-pulse"
-            />
-          </div>
-        </aside>
-
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="sticky top-0 h-14 bg-white border-b border-gray-300 flex items-center justify-between px-4 lg:px-6 shadow-sm z-[110]">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden p-2 hover:bg-blue-50 rounded-md transition-all active:scale-95 z-[120]"
-              >
-                {isSidebarOpen ? (
-                  <X size={26} strokeWidth={3} className="text-blue-600" />
-                ) : (
-                  <Menu size={26} strokeWidth={3} className="text-blue-600" />
-                )}
-              </button>
-
-              <h1 className="font-black text-gray-700 uppercase italic text-sm tracking-tighter">
-                Central <span className="text-blue-600">Management</span> System
+            {/* Logo đưa vào Header */}
+            <div className="flex items-center gap-2">
+              <img src="ofi-logo.svg" alt="Logo" className="w-10 h-auto" />
+              <h1 className="font-black text-gray-700 uppercase italic text-lg tracking-tighter ml-10">
+                Vĩnh Cường - <span className="text-blue-600">BMS</span>
               </h1>
             </div>
+          </div>
 
-            <div className="flex items-center gap-4 text-right">
-              <div className="hidden sm:block">
-                <p className="text-[9px] font-bold text-gray-400 uppercase leading-none tracking-wider">
-                  System Status: OK
-                </p>
-                <p className="text-xs font-mono font-bold text-gray-600">
-                  {currentTime}
-                </p>
-              </div>
-              <div
-                onClick={handleLogout}
-                className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-sm cursor-pointer hover:bg-red-50 transition-colors"
-                title="Click to Logout"
-              >
-                👤
-              </div>
+          <div className="flex items-center gap-4 text-right">
+            <div className="hidden sm:block">
+              <p className="text-[9px] font-bold text-gray-400 uppercase leading-none tracking-wider">
+                System Status: OK
+              </p>
+              <p className="text-xs font-mono font-bold text-gray-600">
+                {currentTime}
+              </p>
             </div>
-          </header>
+            <div
+              onClick={handleLogout}
+              className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-sm cursor-pointer hover:bg-red-50 transition-colors"
+              title="Click to Logout"
+            >
+              👤
+            </div>
+          </div>
+        </header>
 
-          <main className="flex-1 bg-[#f8f9fa]">{children}</main>
+        <div className="flex flex-1 relative overflow-hidden">
+          {/* OVERLAY cho Mobile */}
+          {isSidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black/50 z-[110] lg:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
 
-          <footer className="h-8 bg-gray-200 border-t border-gray-300 flex items-center px-6 text-[9px] font-bold text-gray-500 uppercase tracking-[0.15em]">
-            SCADA Management System © 2026
-          </footer>
+          {/* SIDEBAR: Nằm dưới Header (top-14) */}
+          <aside
+            className={`
+            fixed lg:sticky top-14 bottom-0 left-0 w-20 bg-[#3b5998] flex flex-col shadow-2xl z-[120] transition-transform duration-300
+            ${
+              isSidebarOpen
+                ? "translate-x-0"
+                : "-translate-x-full lg:translate-x-0"
+            }
+          `}
+          >
+            <nav className="flex-1 mt-2">
+              <NavItem href="/scada" icon={LayoutDashboard} label="SCADA" />
+              <NavItem href="/power-meter" icon={Zap} label="Power" />
+              <NavItem href="/power-consume" icon={BarChart3} label="Energy" />
+              <NavItem href="/gas-compressor" icon={Gauge} label="Gas Comp" />
+              <NavItem
+                href="/alarm-report"
+                icon={TriangleAlert}
+                label="Alarm"
+              />
+
+              <div className="h-[1px] bg-blue-400/20 my-4 mx-3"></div>
+
+              <div className="flex flex-col gap-4 items-center opacity-60">
+                <Bell
+                  size={20}
+                  className="text-white cursor-pointer hover:opacity-100"
+                />
+                <Settings
+                  size={20}
+                  className="text-white cursor-pointer hover:opacity-100"
+                />
+                <HelpCircle
+                  size={20}
+                  className="text-white cursor-pointer hover:opacity-100"
+                />
+              </div>
+            </nav>
+
+            <div className="py-4 text-center">
+              <Activity
+                size={18}
+                className="text-green-400 inline-block animate-pulse"
+              />
+            </div>
+          </aside>
+
+          {/* MAIN CONTENT AREA */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-auto">
+            <main className="flex-1 bg-[#f8f9fa]">{children}</main>
+
+            <footer className="h-8 bg-gray-200 border-t border-gray-300 flex items-center px-6 text-[9px] font-bold text-gray-500 uppercase tracking-[0.15em]">
+              SCADA Management System © 2026
+            </footer>
+          </div>
         </div>
       </body>
     </html>

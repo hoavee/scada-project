@@ -11,6 +11,15 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/scada",
+        permanent: true, // true nếu bạn muốn redirect 301 (vĩnh viễn)
+      },
+    ];
+  },
 };
 
 export default nextConfig;
