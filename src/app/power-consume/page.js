@@ -63,7 +63,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function PowerConsumePage() {
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedMeters, setSelectedMeters] = useState(["MUL-DEHUM2"]);
+  const [selectedMeters, setSelectedMeters] = useState(["MAIN POWER METER"]);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState({ start: "", end: "" });

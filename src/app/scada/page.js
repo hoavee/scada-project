@@ -6,6 +6,7 @@ import RotatingFan from "../components/RotatingFan";
 import SystemLabel from "../components/SystemLabel";
 import EnvironmentalStats from "../components/EnvironmentalStats";
 import TrendPopup from "../components/TrendPopup";
+import DeviceReportPopup from "../components/DeviceReportPopup";
 import { DEVICES_CONFIG, INITIAL_DEVICE_STATUS } from "../constants/devices";
 
 const StatRow = ({ label, value, unit, onEdit, secondaryValue }) => {
@@ -18,7 +19,7 @@ const StatRow = ({ label, value, unit, onEdit, secondaryValue }) => {
         {label}:
         {isSetting && (
           <button
-            onClick={() => onEdit(label, value)}
+            onClick={() => onEdit(label, value, secondaryValue)}
             className="hover:text-blue-600 transition-colors hover:cursor-pointer"
           >
             <Settings size={14} />
@@ -59,9 +60,18 @@ export default function ScadaPage() {
   const imgRef = useRef(null);
   const [trendModal, setTrendModal] = useState({ isOpen: false, label: "" });
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [reportConfig, setReportConfig] = useState({
+    isOpen: false,
+    label: "",
+    id: "",
+  });
 
   const handleOpenTrend = (label) => {
     setTrendModal({ isOpen: true, label });
+  };
+
+  const handleOpenReport = (id, label) => {
+    setReportConfig({ isOpen: true, id, label });
   };
 
   const [apiTimestamp, setApiTimestamp] = useState("2026-01-12 21:15:37");
@@ -215,27 +225,27 @@ export default function ScadaPage() {
             color: data.pumps?.pump3?.run === 1 ? "bg-green-800" : "bg-red-600",
           },
           watertemp: { status: `${data.waterTemp}°C`, color: "bg-blue-600" },
-          idu1: {
+          iduv1: {
             status: data.valves?.valve1?.state || "CLOSE",
             color:
               data.valves?.valve1?.value === 1 ? "bg-green-800" : "bg-red-600",
           },
-          idu2: {
+          iduv2: {
             status: data.valves?.valve2?.state || "CLOSE",
             color:
               data.valves?.valve2?.value === 1 ? "bg-green-800" : "bg-red-600",
           },
-          idu3: {
+          iduv3: {
             status: data.valves?.valve3?.state || "CLOSE",
             color:
               data.valves?.valve3?.value === 1 ? "bg-green-800" : "bg-red-600",
           },
-          idu4: {
+          iduv4: {
             status: data.valves?.valve4?.state || "CLOSE",
             color:
               data.valves?.valve4?.value === 1 ? "bg-green-800" : "bg-red-600",
           },
-          idu5: {
+          iduv5: {
             status: data.valves?.valve5?.state || "CLOSE",
             color:
               data.valves?.valve5?.value === 1 ? "bg-green-800" : "bg-red-600",
@@ -280,9 +290,19 @@ export default function ScadaPage() {
     humValue: "",
     mode: "single",
   });
-  const handleOpenEdit = (label, value) => {
+  const handleOpenEdit = (label, value, secondaryValue) => {
     setUpdateSuccess(false);
-    setEditModal({ isVisible: true, label, value, mode: "single" });
+    if (label === "Time changer") {
+      setEditModal({
+        isVisible: true,
+        label,
+        value: value, // Giá trị Time changer
+        secondaryValue: secondaryValue, // Giá trị HT
+        mode: "timeChanger",
+      });
+    } else {
+      setEditModal({ isVisible: true, label, value, mode: "single" });
+    }
   };
   const handleOpenEnvEdit = (label, temp, hum) => {
     setUpdateSuccess(false);
@@ -305,7 +325,25 @@ export default function ScadaPage() {
     const iduNumber = editModal.label.replace(/^\D+/g, "");
     const promises = [];
 
-    if (editModal.mode === "environmental") {
+    if (editModal.mode === "timeChanger") {
+      const timeVal = document.getElementById("modal-input").value;
+      const minVal = document.getElementById("modal-secondary-input").value;
+
+      promises.push(
+        fetch(`/api-proxy/api/post/timechangerht`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ temp: parseFloat(timeVal) }),
+        }),
+      );
+      promises.push(
+        fetch(`/api-proxy/api/post/min`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ temp: parseFloat(minVal) }),
+        }),
+      );
+    } else if (editModal.mode === "environmental") {
       const newTemp = document.getElementById("modal-temp").value;
       const newHum = document.getElementById("modal-hum").value;
       if (parseFloat(newTemp) !== parseFloat(editModal.tempValue)) {
@@ -437,6 +475,32 @@ export default function ScadaPage() {
                         />
                       </div>
                     </div>
+                  ) : editModal.mode === "timeChanger" ? (
+                    <div className="space-y-3 mb-4">
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400">
+                          TIME CHANGER (Min)
+                        </label>
+                        <input
+                          id="modal-input"
+                          type="text"
+                          defaultValue={editModal.value}
+                          className="w-full border border-gray-400 p-2 font-mono text-center"
+                          autoFocus
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-gray-400">
+                          HT VALUE
+                        </label>
+                        <input
+                          id="modal-secondary-input"
+                          type="text"
+                          defaultValue={editModal.secondaryValue}
+                          className="w-full border border-gray-400 p-2 font-mono text-center"
+                        />
+                      </div>
+                    </div>
                   ) : (
                     <input
                       id="modal-input"
@@ -474,6 +538,17 @@ export default function ScadaPage() {
           />
         )}
 
+        {/* Render Popup Report */}
+        {reportConfig.isOpen && (
+          <DeviceReportPopup
+            id={reportConfig.id}
+            label={reportConfig.label}
+            onClose={() =>
+              setReportConfig({ isOpen: false, id: "", label: "" })
+            }
+          />
+        )}
+
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 pb-20">
           <div className="lg:col-span-9 border border-gray-300 bg-[#fdfdfd] relative overflow-auto">
             <div
@@ -495,6 +570,13 @@ export default function ScadaPage() {
                   status={deviceStatus[dev.id]?.status}
                   statusColor={deviceStatus[dev.id]?.color}
                   position={{ left: dev.left, top: dev.top }}
+                  showReport={
+                    dev.id.includes("pump") ||
+                    dev.id.includes("fan") ||
+                    dev.id.includes("valve") ||
+                    dev.id.includes("iduv")
+                  }
+                  onReport={() => handleOpenReport(dev.id, dev.label)}
                 />
               ))}
               {[5, 4, 3, 2, 1].map((num, idx) => {
@@ -589,7 +671,7 @@ export default function ScadaPage() {
                     // Giả sử lấy số lượng HT từ statsData hoặc mặc định là 5 như ảnh
                     secondaryValue={
                       item.label === "Time changer"
-                        ? statsData.secondaryValue || "3"
+                        ? statsData.secondaryValue || "0"
                         : null
                     }
                   />

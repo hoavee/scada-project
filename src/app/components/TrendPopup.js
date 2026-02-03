@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -10,7 +10,9 @@ import {
 } from "recharts";
 
 const TrendPopup = ({ label, onClose }) => {
-  const [timeRange, setTimeRange] = useState(12);
+  const [timeRange, setTimeRange] = useState(3);
+  const [apiData, setApiData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const ranges = [
     { label: "1H", value: 1 },
@@ -21,37 +23,41 @@ const TrendPopup = ({ label, onClose }) => {
     { label: "24H", value: 24 },
   ];
 
-  const dummyData = useMemo(() => {
-    const data = [];
-    const now = new Date();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api-proxy/api/temp&hum"); // Link API chính xác
+        const data = await response.json();
+        setApiData(data);
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-    // Logic làm tròn về mốc 5 phút gần nhất
-    // Ví dụ: 15:07 -> 15:05, 15:04 -> 15:00
-    const minutes = now.getMinutes();
-    const roundedMinutes = Math.floor(minutes / 5) * 5;
-    const startTime = new Date(now);
-    startTime.setMinutes(roundedMinutes, 0, 0);
+  const chartData = useMemo(() => {
+    if (!apiData || apiData.length === 0) return [];
 
-    const totalPoints = (timeRange * 60) / 5;
+    const recordsToTake = timeRange * 12; // 5 phút/lần
 
-    for (let i = totalPoints; i >= 0; i--) {
-      // Tính lùi lại từ mốc thời gian đã làm tròn
-      const pointTime = new Date(startTime.getTime() - i * 5 * 60000);
-      data.push({
-        time: pointTime.toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false, // Sử dụng định dạng 24h để chuyên nghiệp hơn
-        }),
-        temp: parseFloat((12 + Math.random() * 2).toFixed(2)),
-        hum: parseFloat((50 + Math.random() * 10).toFixed(2)),
-      });
-    }
-    return data;
-  }, [timeRange]);
+    const formattedData = apiData.slice(0, recordsToTake).map((item) => {
+      // XỬ LÝ TIMEZONE: Cắt chuỗi để lấy giờ thực tế từ API, bỏ qua việc tự cộng +7 của hệ thống
+      const timeString = item.time.split("T")[1].substring(0, 5);
+
+      return {
+        time: timeString, // Kết quả sẽ là "11:45"
+        value: parseFloat(item[label]),
+      };
+    });
+
+    return formattedData.reverse(); // Mới nhất nằm bên phải
+  }, [apiData, timeRange, label]);
 
   const isTemp = label.startsWith("T");
-  const dataKey = isTemp ? "temp" : "hum";
   const strokeColor = isTemp ? "#ef4444" : "#3b82f6";
   const unit = isTemp ? "°C" : "%";
 
@@ -64,7 +70,7 @@ const TrendPopup = ({ label, onClose }) => {
               {isTemp ? "Temperature" : "Humidity"} Trend: {label}
             </h3>
             <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">
-              Data Points: Every 5 Minutes
+              Data Points: 5 Min Intervals
             </p>
           </div>
 
@@ -86,7 +92,7 @@ const TrendPopup = ({ label, onClose }) => {
 
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-red-600 font-black text-2xl transition-colors"
+            className="text-gray-400 hover:text-red-600 font-black text-2xl"
           >
             ✕
           </button>
@@ -94,7 +100,10 @@ const TrendPopup = ({ label, onClose }) => {
 
         <div className="h-[400px] w-full bg-gray-50/30 p-2 border border-gray-100 rounded-sm">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={dummyData}>
+            <LineChart
+              data={chartData}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            >
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
@@ -106,7 +115,7 @@ const TrendPopup = ({ label, onClose }) => {
                 tick={{ fill: "#374151", fontWeight: "bold" }}
                 axisLine={{ stroke: "#374151", strokeWidth: 1 }}
                 tickLine={false}
-                interval={timeRange <= 3 ? 5 : timeRange <= 7 ? 11 : 23}
+                interval={Math.floor(chartData.length / 8)}
               />
               <YAxis
                 fontSize={10}
@@ -114,7 +123,8 @@ const TrendPopup = ({ label, onClose }) => {
                 axisLine={{ stroke: "#374151", strokeWidth: 1 }}
                 tickLine={false}
                 unit={unit}
-                domain={["auto", "auto"]}
+                // Giữ khoảng cách 1 đơn vị so với đỉnh/đáy
+                domain={["dataMin - 1", "dataMax + 1"]}
               />
               <Tooltip
                 contentStyle={{
@@ -127,7 +137,7 @@ const TrendPopup = ({ label, onClose }) => {
               />
               <Line
                 type="monotone"
-                dataKey={dataKey}
+                dataKey="value"
                 stroke={strokeColor}
                 strokeWidth={3}
                 name={isTemp ? "Temperature" : "Humidity"}

@@ -192,10 +192,8 @@ export default function GasCompressor() {
               const deviceId = key.replace("compload", "comp");
               let displayStatus = "";
               let color = "";
-              if (loadData.fault === 1) {
-                displayStatus = "FAULT";
-                color = "bg-yellow-500";
-              } else if (loadData.run === 1) {
+
+              if (loadData.run === 1) {
                 displayStatus = `RUN (${loadData.state || "0%"})`;
                 color = "bg-green-800";
               } else {
